@@ -3,12 +3,28 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Settings, Upload, Save, Play } from 'lucide-react';
+import { Settings, Upload, Save, Play, Package } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+
+// Types for the algorithm data
+export interface AlgorithmStep {
+  step: number;
+  x: number;
+  y: number;
+}
+
+export interface AlgorithmBox {
+  index: number;
+  retrieval_order: number;
+  path: AlgorithmStep[];
+}
+
+export type AlgorithmData = AlgorithmBox[];
 
 interface StorageGridConfigProps {
   onConfigSave: (config: StorageConfig) => void;
   onAnimateRetrieval: () => void;
+  onAlgorithmData?: (data: AlgorithmData) => void;
 }
 
 export interface StorageConfig {
@@ -23,7 +39,8 @@ export interface StorageConfig {
 
 export const StorageGridConfig: React.FC<StorageGridConfigProps> = ({
   onConfigSave,
-  onAnimateRetrieval
+  onAnimateRetrieval,
+  onAlgorithmData
 }) => {
   const { toast } = useToast();
   const [config, setConfig] = useState<StorageConfig>({
@@ -40,11 +57,50 @@ export const StorageGridConfig: React.FC<StorageGridConfigProps> = ({
     setConfig(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setBoxDataFile(file);
       setConfig(prev => ({ ...prev, boxData: file }));
+      
+      // Parse and validate the algorithm data
+      try {
+        const text = await file.text();
+        let data: AlgorithmData;
+        
+        if (file.name.endsWith('.json')) {
+          data = JSON.parse(text);
+        } else {
+          // For CSV, you'd need to implement CSV parsing
+          toast({
+            title: "CSV parsing not implemented",
+            description: "Please use JSON format for now.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        // Validate the data structure
+        if (Array.isArray(data) && data.every(item => 
+          typeof item.index === 'number' && 
+          typeof item.retrieval_order === 'number' && 
+          Array.isArray(item.path)
+        )) {
+          onAlgorithmData?.(data);
+          toast({
+            title: "Algorithm data loaded",
+            description: `Successfully loaded ${data.length} boxes for animation.`
+          });
+        } else {
+          throw new Error('Invalid data format');
+        }
+      } catch (error) {
+        toast({
+          title: "File parsing error",
+          description: "Please check your file format and try again.",
+          variant: "destructive"
+        });
+      }
     }
   };
 

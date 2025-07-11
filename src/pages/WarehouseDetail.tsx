@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { NeomorphicIcon } from '@/components/NeomorphicIcon';
-import { StorageGridConfig, StorageConfig } from '@/components/StorageGridConfig';
+import { StorageGridConfig, StorageConfig, AlgorithmData } from '@/components/StorageGridConfig';
+import { AnimatedStorageGrid } from '@/components/AnimatedStorageGrid';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Package, Truck, Route } from 'lucide-react';
 
@@ -12,6 +13,7 @@ const WarehouseDetail: React.FC = () => {
   const navigate = useNavigate();
   const [currentConfig, setCurrentConfig] = useState<StorageConfig | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [algorithmData, setAlgorithmData] = useState<AlgorithmData | null>(null);
 
   const handleBackClick = () => {
     navigate('/');
@@ -32,6 +34,10 @@ const WarehouseDetail: React.FC = () => {
     setTimeout(() => {
       setIsAnimating(false);
     }, 3000);
+  };
+
+  const handleAlgorithmData = (data: AlgorithmData) => {
+    setAlgorithmData(data);
   };
 
   // Generate grid positions for storage bins
@@ -119,55 +125,11 @@ const WarehouseDetail: React.FC = () => {
                   </p>
                 </div>
 
-                {/* Simple Storage Grid */}
-                <div className="flex justify-center">
-                  <svg
-                    width="100%"
-                    height="400"
-                    viewBox="0 0 400 400"
-                    className="border rounded max-w-full"
-                    style={{ backgroundColor: 'hsl(var(--muted))' }}
-                  >
-                    {/* Empty grid background */}
-                    <rect
-                      x="0"
-                      y="0"
-                      width="400"
-                      height="400"
-                      fill="hsl(var(--muted))"
-                      stroke="hsl(var(--border))"
-                      strokeWidth="1"
-                    />
-                    
-                    {/* Grid lines */}
-                    {Array.from({ length: 9 }, (_, i) => (
-                      <g key={`vertical-${i}`}>
-                        <line
-                          x1={i * 50}
-                          y1="0"
-                          x2={i * 50}
-                          y2="400"
-                          stroke="hsl(var(--border))"
-                          strokeWidth="1"
-                          opacity="0.3"
-                        />
-                      </g>
-                    ))}
-                    {Array.from({ length: 9 }, (_, i) => (
-                      <g key={`horizontal-${i}`}>
-                        <line
-                          x1="0"
-                          y1={i * 50}
-                          x2="400"
-                          y2={i * 50}
-                          stroke="hsl(var(--border))"
-                          strokeWidth="1"
-                          opacity="0.3"
-                        />
-                      </g>
-                    ))}
-                  </svg>
-                </div>
+                {/* Animated Storage Grid */}
+                <AnimatedStorageGrid 
+                  algorithmData={algorithmData}
+                  onAnimationComplete={() => console.log('Animation complete!')}
+                />
               </div>
             </div>
 
@@ -176,6 +138,7 @@ const WarehouseDetail: React.FC = () => {
               <StorageGridConfig 
                 onConfigSave={handleConfigSave}
                 onAnimateRetrieval={handleAnimateRetrieval}
+                onAlgorithmData={handleAlgorithmData}
               />
             </div>
           </div>
