@@ -45,7 +45,7 @@ export const OptimizationControls: React.FC<OptimizationControlsProps> = ({
         <div className="space-y-3">
           <div className="flex justify-between items-center">
             <Label htmlFor="alpha-slider" className="text-sm font-medium">
-              Alpha (Apex Cost)
+              Alpha (Construction Cost)
             </Label>
             <span className="text-sm text-muted-foreground font-mono">
               {alpha.toFixed(3)}
@@ -66,7 +66,7 @@ export const OptimizationControls: React.FC<OptimizationControlsProps> = ({
         <div className="space-y-3">
           <div className="flex justify-between items-center">
             <Label htmlFor="beta-slider" className="text-sm font-medium">
-              Beta (Opex)
+              Beta (Time Efficiency)
             </Label>
             <span className="text-sm text-muted-foreground font-mono">
               {beta.toFixed(3)}

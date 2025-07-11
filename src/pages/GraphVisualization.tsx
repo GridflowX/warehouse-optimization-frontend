@@ -32,10 +32,14 @@ const GraphVisualization: React.FC = () => {
     return (
       <div className="min-h-screen bg-background graph-grid-background flex items-center justify-center">
         <div className="text-center space-y-4">
-          <NeomorphicIcon size="lg">
-            <Loader2 className="w-8 h-8 animate-spin" />
-          </NeomorphicIcon>
-          <p className="text-lg font-medium">Loading warehouse network...</p>
+          {/* Professional loading spinner */}
+          <div className="flex justify-center">
+            <span className="relative flex h-16 w-16">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-40"></span>
+              <span className="relative inline-flex rounded-full h-16 w-16 border-4 border-primary border-t-transparent animate-spin"></span>
+            </span>
+          </div>
+          <p className="text-lg font-medium animate-fade-in">Loading warehouse network...</p>
         </div>
       </div>
     );
@@ -94,50 +98,49 @@ const GraphVisualization: React.FC = () => {
             </div>
           </div>
 
-          {/* Graph Visualization */}
-          <div className="space-y-4">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold mb-2">Network Topology</h2>
-              <p className="text-muted-foreground">
-                Click on any warehouse to view detailed internal operations
-              </p>
+          {/* Graph and Optimization Controls Side by Side (Responsive) */}
+          <div className="flex flex-col lg:flex-row gap-8 items-start justify-center w-full">
+            {/* Graph Visualization */}
+            <div className="flex-1 min-w-0">
+              <div className="text-center mb-4">
+                <h2 className="text-2xl font-bold mb-2">Network Topology</h2>
+                <p className="text-muted-foreground">
+                  Click on any warehouse to view detailed internal operations
+                </p>
+              </div>
+              <GraphCanvas
+                warehouses={graphData.coordinates}
+                edges={graphData.edges}
+                onWarehouseClick={handleWarehouseClick}
+              />
             </div>
-            
-            <GraphCanvas
-              warehouses={graphData.coordinates}
-              edges={graphData.edges}
-              onWarehouseClick={handleWarehouseClick}
-            />
-          </div>
-
-          {/* Optimization Controls */}
-          <div className="space-y-4">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold mb-2">Optimization Parameters</h2>
-              <p className="text-muted-foreground">
-                Adjust Alpha and Beta values to optimize the warehouse network
-              </p>
-            </div>
-            
-            <OptimizationControls
-              onOptimize={handleOptimization}
-              loading={optimizing}
-            />
-          </div>
-
-          {/* Statistics */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto">
-            <div className="text-center p-4 rounded-lg border bg-card">
-              <div className="text-2xl font-bold">{graphData.coordinates.length}</div>
-              <div className="text-sm text-muted-foreground">Warehouses</div>
-            </div>
-            <div className="text-center p-4 rounded-lg border bg-card">
-              <div className="text-2xl font-bold">{graphData.edges.length}</div>
-              <div className="text-sm text-muted-foreground">Direct Routes</div>
-            </div>
-            <div className="text-center p-4 rounded-lg border bg-card">
-              <div className="text-2xl font-bold">{graphData.initialDistance.toFixed(1)}</div>
-              <div className="text-sm text-muted-foreground">Initial Distance</div>
+            {/* Optimization Controls and Statistics */}
+            <div className="w-full lg:w-[400px] flex-shrink-0 flex flex-col gap-6">
+              <div className="text-center mb-4">
+                <h2 className="text-2xl font-bold mb-2">Optimization Parameters</h2>
+                <p className="text-muted-foreground">
+                  Adjust Alpha and Beta values to optimize the warehouse network
+                </p>
+              </div>
+              <OptimizationControls
+                onOptimize={handleOptimization}
+                loading={optimizing}
+              />
+              {/* Statistics */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto w-full">
+                <div className="text-center p-4 rounded-lg border bg-card">
+                  <div className="text-2xl font-bold">{graphData.coordinates.length}</div>
+                  <div className="text-sm text-muted-foreground">Warehouses</div>
+                </div>
+                <div className="text-center p-4 rounded-lg border bg-card">
+                  <div className="text-2xl font-bold">{graphData.edges.length}</div>
+                  <div className="text-sm text-muted-foreground">Direct Routes</div>
+                </div>
+                <div className="text-center p-4 rounded-lg border bg-card">
+                  <div className="text-2xl font-bold">{graphData.initialDistance.toFixed(1)}</div>
+                  <div className="text-sm text-muted-foreground">Initial Distance</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
