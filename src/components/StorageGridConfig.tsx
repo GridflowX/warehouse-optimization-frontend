@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Settings, Upload, Save, Play, Package } from 'lucide-react';
+import { Settings, Upload, Save, Play, Package, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 // Types for the algorithm data
@@ -51,53 +51,97 @@ export const StorageGridConfig: React.FC<StorageGridConfigProps> = ({
     maximumSideLength: 200,
     clearance: 20
   });
-  const [boxDataFile, setBoxDataFile] = useState<File | null>(null);
+  const [packagingFile, setPackagingFile] = useState<File | null>(null);
+  const [retrievalFile, setRetrievalFile] = useState<File | null>(null);
 
   const handleInputChange = (field: keyof StorageConfig, value: number) => {
     setConfig(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePackagingFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      setBoxDataFile(file);
+      setPackagingFile(file);
       setConfig(prev => ({ ...prev, boxData: file }));
       
-      // Parse and validate the algorithm data
+      try {
+        const text = await file.text();
+        let data: any;
+        
+        if (file.name.endsWith('.json')) {
+          data = JSON.parse(text);
+        } else if (file.name.endsWith('.csv')) {
+          toast({
+            title: "CSV parsing not implemented",
+            description: "Please use JSON format for packaging data.",
+            variant: "destructive"
+          });
+          return;
+        } else {
+          throw new Error('Unsupported file format');
+        }
+        
+        toast({
+          title: "Packaging data loaded",
+          description: `Successfully loaded packaging configuration.`
+        });
+      } catch (error) {
+        console.error('Packaging file parsing error:', error);
+        toast({
+          title: "File parsing error",
+          description: "Invalid JSON format or unsupported file type. Please check your packaging file.",
+          variant: "destructive"
+        });
+      }
+    }
+  };
+
+  const handleRetrievalFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setRetrievalFile(file);
+      
       try {
         const text = await file.text();
         let data: AlgorithmData;
         
         if (file.name.endsWith('.json')) {
           data = JSON.parse(text);
-        } else {
-          // For CSV, you'd need to implement CSV parsing
+        } else if (file.name.endsWith('.csv')) {
           toast({
             title: "CSV parsing not implemented",
-            description: "Please use JSON format for now.",
+            description: "Please use JSON format for retrieval data.",
             variant: "destructive"
           });
           return;
+        } else {
+          throw new Error('Unsupported file format');
         }
         
         // Validate the data structure
         if (Array.isArray(data) && data.every(item => 
           typeof item.index === 'number' && 
           typeof item.retrieval_order === 'number' && 
-          Array.isArray(item.path)
+          Array.isArray(item.path) &&
+          item.path.every(step => 
+            typeof step.step === 'number' &&
+            typeof step.x === 'number' &&
+            typeof step.y === 'number'
+          )
         )) {
           onAlgorithmData?.(data);
           toast({
-            title: "Algorithm data loaded",
+            title: "Retrieval data loaded",
             description: `Successfully loaded ${data.length} boxes for animation.`
           });
         } else {
-          throw new Error('Invalid data format');
+          throw new Error('Invalid retrieval data format');
         }
       } catch (error) {
+        console.error('Retrieval file parsing error:', error);
         toast({
           title: "File parsing error",
-          description: "Please check your file format and try again.",
+          description: "Invalid retrieval data format. Expected array of boxes with index, retrieval_order, and path properties.",
           variant: "destructive"
         });
       }
@@ -135,26 +179,57 @@ export const StorageGridConfig: React.FC<StorageGridConfigProps> = ({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* File Upload */}
+        {/* Packaging File Upload */}
         <div className="space-y-2">
-          <Label htmlFor="box-data">Upload CSV or JSON with box data:</Label>
+          <Label htmlFor="packaging-data" className="flex items-center gap-2">
+            <Package className="w-4 h-4" />
+            Upload Packaging JSON or CSV:
+          </Label>
           <div className="flex items-center gap-4">
             <Button
               variant="outline"
-              onClick={() => document.getElementById('box-data')?.click()}
+              onClick={() => document.getElementById('packaging-data')?.click()}
               className="flex items-center gap-2"
             >
               <Upload className="w-4 h-4" />
-              Choose file
+              Choose packaging file
             </Button>
             <span className="text-sm text-muted-foreground">
-              {boxDataFile ? boxDataFile.name : 'No file chosen'}
+              {packagingFile ? packagingFile.name : 'No packaging file chosen'}
             </span>
             <input
-              id="box-data"
+              id="packaging-data"
               type="file"
               accept=".csv,.json"
-              onChange={handleFileChange}
+              onChange={handlePackagingFileChange}
+              className="hidden"
+            />
+          </div>
+        </div>
+
+        {/* Retrieval File Upload */}
+        <div className="space-y-2">
+          <Label htmlFor="retrieval-data" className="flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            Upload Retrieval JSON or CSV:
+          </Label>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              onClick={() => document.getElementById('retrieval-data')?.click()}
+              className="flex items-center gap-2"
+            >
+              <Upload className="w-4 h-4" />
+              Choose retrieval file
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              {retrievalFile ? retrievalFile.name : 'No retrieval file chosen'}
+            </span>
+            <input
+              id="retrieval-data"
+              type="file"
+              accept=".csv,.json"
+              onChange={handleRetrievalFileChange}
               className="hidden"
             />
           </div>
