@@ -1,10 +1,7 @@
-// Theme Toggle Component for Dark/Light Mode
+// Simple Theme Toggle Component
 
 import React from 'react';
 import { useTheme } from 'next-themes';
-import { Button } from '@/components/ui/button';
-import { NeomorphicIcon } from './NeomorphicIcon';
-import { Sun, Moon } from 'lucide-react';
 
 export const ThemeToggle: React.FC = () => {
   const { theme, setTheme } = useTheme();
@@ -14,19 +11,11 @@ export const ThemeToggle: React.FC = () => {
   };
 
   return (
-    <Button
-      variant="ghost"
-      size="sm"
+    <button
       onClick={toggleTheme}
-      className="fixed top-4 right-4 z-50"
+      className="fixed top-4 right-4 z-50 px-3 py-1 text-sm bg-transparent border border-border rounded-md hover:bg-muted/50 transition-colors"
     >
-      <NeomorphicIcon size="sm">
-        {theme === 'dark' ? (
-          <Sun className="w-4 h-4" />
-        ) : (
-          <Moon className="w-4 h-4" />
-        )}
-      </NeomorphicIcon>
-    </Button>
+      {theme === 'dark' ? 'Light' : 'Dark'}
+    </button>
   );
 };

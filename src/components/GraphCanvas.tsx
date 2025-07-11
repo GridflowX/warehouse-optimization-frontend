@@ -17,16 +17,16 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
   onWarehouseClick,
   selectedWarehouse
 }) => {
-  // Calculate canvas bounds
+  // Calculate canvas bounds with proper coordinate system starting at (0,0)
   const bounds = useMemo(() => {
     if (warehouses.length === 0) return { width: 800, height: 600, minX: 0, minY: 0, maxX: 800, maxY: 600 };
     
     const xs = warehouses.map(w => w.x);
     const ys = warehouses.map(w => w.y);
-    const minX = Math.min(...xs) - 50;
-    const maxX = Math.max(...xs) + 50;
-    const minY = Math.min(...ys) - 50;
-    const maxY = Math.max(...ys) + 50;
+    const minX = 0; // Start at (0,0)
+    const minY = 0; // Start at (0,0)
+    const maxX = Math.max(Math.max(...xs) + 100, 800); // Ensure minimum canvas size
+    const maxY = Math.max(Math.max(...ys) + 100, 600); // Ensure minimum canvas size
     
     return {
       minX,
@@ -37,6 +37,9 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       height: maxY - minY
     };
   }, [warehouses]);
+
+  // Grid scale: 1cm = ~37.8 pixels (96 DPI standard)
+  const gridSpacing = 38; // pixels per cm
 
   // Generate all possible connections (dense graph)
   const allConnections = useMemo(() => {
@@ -63,15 +66,20 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         minHeight: '500px'
       }}
     >
-      {/* Grid background */}
-      <div className="absolute inset-0 graph-grid-background" />
-      
-      {/* SVG for connections */}
+      {/* SVG for grid and connections */}
       <svg
         className="absolute inset-0 w-full h-full"
         viewBox={`${bounds.minX} ${bounds.minY} ${bounds.width} ${bounds.height}`}
         preserveAspectRatio="xMidYMid meet"
       >
+        {/* Grid lines */}
+        <defs>
+          <pattern id="grid" width={gridSpacing} height={gridSpacing} patternUnits="userSpaceOnUse">
+            <path d={`M ${gridSpacing} 0 L 0 0 0 ${gridSpacing}`} fill="none" stroke="currentColor" strokeWidth="0.5" className="text-muted-foreground/20"/>
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid)" />
+        
         {/* Draw all possible connections as dotted lines */}
         {allConnections.map((connection, index) => (
           <line
@@ -86,19 +94,15 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
       </svg>
       
       {/* Warehouse nodes container */}
-      <div 
-        className="absolute inset-0"
-        style={{
-          transform: `scale(${Math.min(1, 800 / bounds.width, 600 / bounds.height)})`,
-          transformOrigin: 'top left'
-        }}
-      >
+      <div className="absolute inset-0">
         {warehouses.map((warehouse) => (
           <WarehouseNode
             key={warehouse.id}
             warehouse={warehouse}
             onClick={onWarehouseClick}
             selected={selectedWarehouse === warehouse.id}
+            bounds={bounds}
+            containerSize={{ width: 800, height: 600 }}
           />
         ))}
       </div>

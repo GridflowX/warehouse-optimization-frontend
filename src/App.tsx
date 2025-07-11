@@ -5,6 +5,7 @@ import { ThemeProvider } from "next-themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { CompanyLogo } from "@/components/CompanyLogo";
 import GraphVisualization from "./pages/GraphVisualization";
 import WarehouseDetail from "./pages/WarehouseDetail";
 import NotFound from "./pages/NotFound";
@@ -17,6 +18,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <CompanyLogo />
         <ThemeToggle />
         <BrowserRouter>
           <Routes>
