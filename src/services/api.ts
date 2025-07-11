@@ -4,7 +4,7 @@ import { GraphData, OptimizationRequest, OptimizationResponse } from '@/types/ap
 import { useMockData } from './mockData';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK === 'true';
+const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK !== 'false'; // Default to true for development
 
 export class ApiService {
   private static async request<T>(
