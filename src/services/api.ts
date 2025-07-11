@@ -3,8 +3,8 @@
 import { GraphData, OptimizationRequest, OptimizationResponse } from '@/types/api';
 import { useMockData } from './mockData';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-const USE_MOCK_DATA = process.env.REACT_APP_USE_MOCK === 'true';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK === 'true';
 
 export class ApiService {
   private static async request<T>(
