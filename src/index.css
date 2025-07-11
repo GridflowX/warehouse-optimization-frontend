@@ -1,96 +1,93 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Warehouse Optimization Research Platform Design System */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Monochrome color palette */
+    --background: 0 0% 93.7%; /* rgb(239,239,239) */
+    --foreground: 0 0% 0%; /* Black text */
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 0 0% 0%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 0 0% 0%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 0 0% 0%; /* Black primary */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 0%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 46.9%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 0%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 0 0% 91.4%;
+    --input: 0 0% 91.4%;
+    --ring: 0 0% 0%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
+    /* Grid pattern colors */
+    --grid-light: 0 0% 85%;
+    --grid-medium: 0 0% 80%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Neumorphic colors */
+    --neomorphic-outer-start: 0 0% 96%; /* #F5F5F5 */
+    --neomorphic-outer-end: 0 0% 88%; /* #E0E0E0 */
+    --neomorphic-middle: 0 0% 85%;
+    --neomorphic-inner: 0 0% 100%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 0 0% 6%; /* Dark background */
+    --foreground: 0 0% 100%; /* White text */
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 6%;
+    --card-foreground: 0 0% 100%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 6%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 0 0% 100%; /* White primary in dark mode */
+    --primary-foreground: 0 0% 0%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 0 0% 17.5%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 0 0% 17.5%;
+    --muted-foreground: 0 0% 65.1%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 0 0% 17.5%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 0 0% 17.5%;
+    --input: 0 0% 17.5%;
+    --ring: 0 0% 100%;
+
+    /* Grid pattern colors for dark mode */
+    --grid-light: 0 0% 15%;
+    --grid-medium: 0 0% 20%;
+
+    /* Neumorphic colors for dark mode */
+    --neomorphic-outer-start: 0 0% 8%;
+    --neomorphic-outer-end: 0 0% 12%;
+    --neomorphic-middle: 0 0% 15%;
+    --neomorphic-inner: 0 0% 18%;
   }
 }
 
@@ -100,6 +97,78 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-inter;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  /* Typography hierarchy */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold;
+    letter-spacing: -0.025em;
+  }
+}
+
+@layer components {
+  /* Grid background pattern */
+  .grid-background {
+    background-image: 
+      linear-gradient(hsl(var(--grid-light)) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--grid-light)) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  /* Subtle grid pattern for graph page */
+  .graph-grid-background {
+    background-image: 
+      linear-gradient(hsl(var(--grid-light)) 0.5px, transparent 0.5px),
+      linear-gradient(90deg, hsl(var(--grid-light)) 0.5px, transparent 0.5px);
+    background-size: 40px 40px;
+    opacity: 0.3;
+  }
+
+  /* Neumorphic icon wrapper */
+  .neomorphic-icon {
+    @apply relative flex items-center justify-center;
+    /* Outermost circle with gradient */
+    background: linear-gradient(180deg, hsl(var(--neomorphic-outer-start)) 0%, hsl(var(--neomorphic-outer-end)) 100%);
+    border-radius: 50%;
+  }
+
+  .neomorphic-icon::before {
+    content: '';
+    @apply absolute inset-1 rounded-full;
+    background: hsl(var(--neomorphic-middle));
+  }
+
+  .neomorphic-icon::after {
+    content: '';
+    @apply absolute inset-2 rounded-full;
+    background: hsl(var(--neomorphic-inner));
+  }
+
+  .neomorphic-icon > * {
+    @apply relative z-10;
+  }
+
+  /* Warehouse node styles */
+  .warehouse-node {
+    @apply w-8 h-8 rounded-full bg-primary border-2 border-background cursor-pointer transition-all duration-200 hover:scale-110 flex items-center justify-center;
+  }
+
+  .warehouse-node:hover {
+    @apply shadow-lg;
+  }
+
+  /* Graph connection lines */
+  .connection-line {
+    stroke: hsl(var(--grid-medium));
+    stroke-width: 1;
+    stroke-dasharray: 3,3;
+    opacity: 0.6;
+  }
+
+  /* Section spacing */
+  .section-padding {
+    @apply py-28;
   }
 }
