@@ -99,9 +99,9 @@ const GraphVisualization: React.FC = () => {
           </div>
 
           {/* Graph and Optimization Controls Side by Side (Responsive) */}
-          <div className="flex flex-col lg:flex-row gap-8 items-start justify-center w-full">
+          <div className="flex flex-col lg:flex-row gap-8 items-center lg:items-start justify-center w-full">
             {/* Graph Visualization */}
-            <div className="flex-1 min-w-0">
+            <div className="w-full lg:flex-1 lg:min-w-0">
               <div className="text-center mb-4">
                 <h2 className="text-2xl font-bold mb-2">Network Topology</h2>
                 <p className="text-muted-foreground">
