@@ -80,202 +80,103 @@ const WarehouseDetail: React.FC = () => {
       <div className="relative z-10 section-padding">
         <div className="container mx-auto px-4">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <Button
-              variant="outline"
-              onClick={handleBackClick}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Network
-            </Button>
+          <div className="mb-8">
+            <div className="flex items-center justify-start mb-6">
+              <Button
+                variant="outline"
+                onClick={handleBackClick}
+                className="flex items-center gap-2"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Network
+              </Button>
+            </div>
             
             <div className="text-center">
-              <NeomorphicIcon>
-                <Package className="w-6 h-6" />
-              </NeomorphicIcon>
-              <h1 className="text-3xl font-bold mt-2">
+              <div className="flex justify-center mb-4">
+                <NeomorphicIcon>
+                  <Package className="w-6 h-6" />
+                </NeomorphicIcon>
+              </div>
+              <h1 className="text-3xl font-bold mb-2">
                 Warehouse {warehouseId}
               </h1>
               <p className="text-muted-foreground">
                 Internal operations and routing visualization
               </p>
             </div>
-            
-            <div /> {/* Spacer for centering */}
           </div>
 
-          {/* Main Content - Configuration and Visualization */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Storage Grid Configuration */}
-            <div>
+          {/* Main Content - Grid and Configuration side by side */}
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* Storage Grid Visualization - Left side on desktop */}
+            <div className="flex-1 order-2 lg:order-1">
+              <div className="bg-card border rounded-lg p-6 shadow-sm">
+                <div className="text-center mb-6">
+                  <h2 className="text-2xl font-bold mb-2">Storage Grid</h2>
+                  <p className="text-muted-foreground">
+                    Single storage grid layout
+                  </p>
+                </div>
+
+                {/* Simple Storage Grid */}
+                <div className="flex justify-center">
+                  <svg
+                    width="100%"
+                    height="400"
+                    viewBox="0 0 400 400"
+                    className="border rounded max-w-full"
+                    style={{ backgroundColor: 'hsl(var(--muted))' }}
+                  >
+                    {/* Empty grid background */}
+                    <rect
+                      x="0"
+                      y="0"
+                      width="400"
+                      height="400"
+                      fill="hsl(var(--muted))"
+                      stroke="hsl(var(--border))"
+                      strokeWidth="1"
+                    />
+                    
+                    {/* Grid lines */}
+                    {Array.from({ length: 9 }, (_, i) => (
+                      <g key={`vertical-${i}`}>
+                        <line
+                          x1={i * 50}
+                          y1="0"
+                          x2={i * 50}
+                          y2="400"
+                          stroke="hsl(var(--border))"
+                          strokeWidth="1"
+                          opacity="0.3"
+                        />
+                      </g>
+                    ))}
+                    {Array.from({ length: 9 }, (_, i) => (
+                      <g key={`horizontal-${i}`}>
+                        <line
+                          x1="0"
+                          y1={i * 50}
+                          x2="400"
+                          y2={i * 50}
+                          stroke="hsl(var(--border))"
+                          strokeWidth="1"
+                          opacity="0.3"
+                        />
+                      </g>
+                    ))}
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Storage Grid Configuration - Right side on desktop */}
+            <div className="flex-1 order-1 lg:order-2">
               <StorageGridConfig 
                 onConfigSave={handleConfigSave}
                 onAnimateRetrieval={handleAnimateRetrieval}
               />
-            </div>
-
-            {/* Warehouse Layout Visualization */}
-            <div className="bg-card border rounded-lg p-6 shadow-sm">
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold mb-2">Warehouse Layout</h2>
-                <p className="text-muted-foreground">
-                  Central alleyway with storage grids and optimized pod routing
-                </p>
-                {isAnimating && (
-                  <div className="mt-2 text-sm text-primary font-medium animate-pulse">
-                    Running retrieval animation...
-                  </div>
-                )}
-              </div>
-
-              {/* SVG Warehouse Layout */}
-              <div className="flex justify-center">
-                <svg
-                  width="100%"
-                  height="400"
-                  viewBox="0 0 700 400"
-                  className="border rounded max-w-full"
-                  style={{ backgroundColor: 'hsl(var(--muted))' }}
-                >
-                  {/* Storage bin grid */}
-                  {gridPositions.map((position) => (
-                    <rect
-                      key={position.id}
-                      x={position.x}
-                      y={position.y}
-                      width="30"
-                      height="30"
-                      fill="hsl(var(--background))"
-                      stroke="hsl(var(--border))"
-                      strokeWidth="1"
-                      rx="2"
-                      className={isAnimating ? "animate-pulse" : ""}
-                    />
-                  ))}
-
-                  {/* Central alleyway */}
-                  <rect
-                    x="300"
-                    y="0"
-                    width="100"
-                    height="400"
-                    fill="hsl(var(--card))"
-                    stroke="hsl(var(--border))"
-                    strokeWidth="2"
-                    strokeDasharray="5,5"
-                  />
-
-                  {/* Alleyway center line */}
-                  <line
-                    x1="350"
-                    y1="0"
-                    x2="350"
-                    y2="400"
-                    stroke="hsl(var(--muted-foreground))"
-                    strokeWidth="1"
-                    strokeDasharray="3,3"
-                    opacity="0.5"
-                  />
-
-                  {/* Pod route path */}
-                  <g>
-                    <polyline
-                      points={routePath.slice(0, Math.min(routePath.length, 8)).map(p => `${p.x},${Math.min(p.y, 350)}`).join(' ')}
-                      fill="none"
-                      stroke="hsl(var(--primary))"
-                      strokeWidth="3"
-                      strokeDasharray="8,4"
-                      opacity={isAnimating ? "1" : "0.8"}
-                      className={isAnimating ? "animate-pulse" : ""}
-                    />
-                    
-                    {/* Route waypoints */}
-                    {routePath.slice(0, Math.min(routePath.length, 8)).map((point, index) => (
-                      <circle
-                        key={index}
-                        cx={point.x}
-                        cy={Math.min(point.y, 350)}
-                        r="4"
-                        fill="hsl(var(--primary))"
-                        opacity={isAnimating ? "1" : "0.8"}
-                        className={isAnimating ? "animate-bounce" : ""}
-                        style={{ animationDelay: `${index * 0.2}s` }}
-                      />
-                    ))}
-
-                    {/* Start marker */}
-                    <circle
-                      cx={routePath[0].x}
-                      cy={Math.min(routePath[0].y, 350)}
-                      r="8"
-                      fill="hsl(var(--background))"
-                      stroke="hsl(var(--primary))"
-                      strokeWidth="2"
-                    />
-                    <text
-                      x={routePath[0].x}
-                      y={Math.min(routePath[0].y, 350) + 5}
-                      textAnchor="middle"
-                      fontSize="10"
-                      fontWeight="bold"
-                      fill="hsl(var(--primary))"
-                    >
-                      S
-                    </text>
-                  </g>
-
-                  {/* Labels */}
-                  <text
-                    x="150"
-                    y="30"
-                    textAnchor="middle"
-                    fontSize="12"
-                    fontWeight="bold"
-                    fill="hsl(var(--foreground))"
-                  >
-                    Storage Grid A
-                  </text>
-                  <text
-                    x="550"
-                    y="30"
-                    textAnchor="middle"
-                    fontSize="12"
-                    fontWeight="bold"
-                    fill="hsl(var(--foreground))"
-                  >
-                    Storage Grid B
-                  </text>
-                  <text
-                    x="350"
-                    y="380"
-                    textAnchor="middle"
-                    fontSize="12"
-                    fontWeight="bold"
-                    fill="hsl(var(--foreground))"
-                  >
-                    Central Alleyway
-                  </text>
-                </svg>
-              </div>
-
-              {/* Legend */}
-              <div className="mt-4 flex justify-center">
-                <div className="flex flex-wrap gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-background border rounded"></div>
-                    <span>Storage Bins</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 bg-card border-2 border-dashed rounded"></div>
-                    <span>Alleyway</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-1 bg-primary rounded"></div>
-                    <span>Pod Route</span>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
 
