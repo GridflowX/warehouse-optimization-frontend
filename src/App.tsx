@@ -18,7 +18,6 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <CompanyLogo />
         <ThemeToggle />
         <BrowserRouter>
           <Routes>

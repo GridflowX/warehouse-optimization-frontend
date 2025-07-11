@@ -75,7 +75,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         {/* Grid lines */}
         <defs>
           <pattern id="grid" width={gridSpacing} height={gridSpacing} patternUnits="userSpaceOnUse">
-            <path d={`M ${gridSpacing} 0 L 0 0 0 ${gridSpacing}`} fill="none" stroke="currentColor" strokeWidth="0.5" className="text-muted-foreground/20"/>
+            <path d={`M ${gridSpacing} 0 L 0 0 0 ${gridSpacing}`} fill="none" stroke="currentColor" strokeWidth="0.5" className="text-primary/30"/>
           </pattern>
         </defs>
         <rect width="100%" height="100%" fill="url(#grid)" />
@@ -91,10 +91,6 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
             className="connection-line"
           />
         ))}
-      </svg>
-      
-      {/* Warehouse nodes container */}
-      <div className="absolute inset-0">
         {warehouses.map((warehouse) => (
           <WarehouseNode
             key={warehouse.id}
@@ -105,7 +101,7 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
             containerSize={{ width: 800, height: 600 }}
           />
         ))}
-      </div>
+      </svg>
     </div>
   );
 };

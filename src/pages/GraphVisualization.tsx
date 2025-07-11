@@ -6,6 +6,7 @@ import { useGraphData } from '@/hooks/useGraphData';
 import { GraphCanvas } from '@/components/GraphCanvas';
 import { OptimizationControls } from '@/components/OptimizationControls';
 import { NeomorphicIcon } from '@/components/NeomorphicIcon';
+import { CompanyLogo } from '@/components/CompanyLogo';
 import { Loader2, Network, AlertCircle } from 'lucide-react';
 import { OptimizationRequest } from '@/types/api';
 
@@ -82,9 +83,7 @@ const GraphVisualization: React.FC = () => {
         <div className="container mx-auto px-4 space-y-8">
           {/* Header */}
           <div className="text-center space-y-4">
-            <NeomorphicIcon size="lg" className="mx-auto">
-              <Network className="w-8 h-8" />
-            </NeomorphicIcon>
+            <CompanyLogo />
             <div>
               <h1 className="text-4xl font-bold mb-2">
                 Warehouse Optimization Research Platform

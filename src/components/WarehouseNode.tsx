@@ -19,32 +19,32 @@ export const WarehouseNode: React.FC<WarehouseNodeProps> = ({
   bounds,
   containerSize
 }) => {
-  // Convert warehouse coordinates to screen coordinates
-  const scaleX = containerSize.width / bounds.width;
-  const scaleY = containerSize.height / bounds.height;
-  const scale = Math.min(scaleX, scaleY);
-  
-  const screenX = (warehouse.x - bounds.minX) * scale;
-  const screenY = (warehouse.y - bounds.minY) * scale;
+  // Calculate the position based on the SVG viewBox coordinate system
+  const nodeSize = 32;
+  const screenX = warehouse.x - (nodeSize / 2);
+  const screenY = warehouse.y - (nodeSize / 2);
 
   return (
-    <div
-      className={cn(
-        'warehouse-node',
-        selected && 'ring-2 ring-primary ring-offset-2'
-      )}
-      style={{
-        position: 'absolute',
-        left: screenX - 16, // Center the 32px node
-        top: screenY - 16,
-        transform: 'translate(0, 0)'
-      }}
-      onClick={() => onClick(warehouse.id)}
-      title={`Warehouse ${warehouse.id} (${warehouse.x}, ${warehouse.y})`}
-    >
-      <span className="text-xs font-bold text-primary-foreground">
+    <g transform={`translate(${warehouse.x}, ${warehouse.y})`}>
+      <circle
+        r="16"
+        className={cn(
+          'warehouse-node cursor-pointer',
+          selected ? 'fill-primary stroke-primary-foreground stroke-2' : 'fill-primary stroke-primary-foreground stroke-1'
+        )}
+        onClick={() => onClick(warehouse.id)}
+      />
+      <text
+        x="0"
+        y="0"
+        textAnchor="middle"
+        dominantBaseline="central"
+        className="text-xs font-bold fill-primary-foreground pointer-events-none"
+        onClick={() => onClick(warehouse.id)}
+      >
         {warehouse.id}
-      </span>
-    </div>
+      </text>
+      <title>{`Warehouse ${warehouse.id} (${warehouse.x}, ${warehouse.y})`}</title>
+    </g>
   );
 };
