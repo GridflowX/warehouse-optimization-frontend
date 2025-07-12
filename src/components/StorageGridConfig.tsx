@@ -160,7 +160,7 @@ export const StorageGridConfig: React.FC<StorageGridConfigProps> = ({
             </div>
           </div>
           {dataMode === 'expanded' && (
-            <div className="space-y-2 pl-4 border-l-2 border-muted">
+            <div className="space-y-3 pl-4 border-l-2 border-muted">
               <Button
                 variant="outline"
                 className="w-full justify-start"
@@ -185,30 +185,30 @@ export const StorageGridConfig: React.FC<StorageGridConfigProps> = ({
                 <Shuffle className="w-4 h-4 mr-2" />
                 Generate Random Data
               </Button>
+              
+              {/* File Status Display */}
+              <div className="space-y-2 pt-2 border-t border-border">
+                <div className="flex items-center justify-between p-2 bg-muted/50 rounded">
+                  <div className="flex items-center gap-2">
+                    <Package className="w-3 h-3" />
+                    <span className="text-xs font-medium">Packaging:</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {packagingFile ? packagingFile.name : 'None'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between p-2 bg-muted/50 rounded">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-3 h-3" />
+                    <span className="text-xs font-medium">Retrieval:</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {retrievalFile ? retrievalFile.name : 'None'}
+                  </span>
+                </div>
+              </div>
             </div>
           )}
-        </div>
-
-        {/* File Status Display */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-            <div className="flex items-center gap-2">
-              <Package className="w-4 h-4" />
-              <span className="text-sm font-medium">Packaging File:</span>
-            </div>
-            <span className="text-sm text-muted-foreground">
-              {packagingFile ? packagingFile.name : 'No file selected'}
-            </span>
-          </div>
-          <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-            <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4" />
-              <span className="text-sm font-medium">Retrieval File:</span>
-            </div>
-            <span className="text-sm text-muted-foreground">
-              {retrievalFile ? retrievalFile.name : 'No file selected'}
-            </span>
-          </div>
         </div>
 
         {/* Hidden file inputs */}

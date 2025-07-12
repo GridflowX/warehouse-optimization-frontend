@@ -88,7 +88,10 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
             y1={connection.from.y}
             x2={connection.to.x}
             y2={connection.to.y}
-            className="connection-line"
+            stroke="hsl(var(--primary))"
+            strokeWidth="1"
+            strokeDasharray="3,3"
+            opacity="0.4"
           />
         ))}
         {warehouses.map((warehouse) => (

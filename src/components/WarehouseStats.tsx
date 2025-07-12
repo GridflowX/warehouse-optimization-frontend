@@ -1,6 +1,6 @@
 import React from 'react';
 import { NeomorphicIcon } from '@/components/NeomorphicIcon';
-import { Package, Route, Truck } from 'lucide-react';
+import { Package, Route, Truck, Clock } from 'lucide-react';
 
 interface WarehouseStatsProps {
   gridPositions: Array<{ id: string; x: number; y: number; side: string }>;
@@ -23,14 +23,14 @@ export const WarehouseStats: React.FC<WarehouseStatsProps> = ({
     <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
       <div className="text-center p-4 rounded-lg border bg-card">
         <NeomorphicIcon className="mx-auto mb-2">
-          <Package className="w-5 h-5" />
+          <Clock className="w-5 h-5" />
         </NeomorphicIcon>
         <div className="text-xl font-bold">{solveTime}s</div>
         <div className="text-sm text-muted-foreground">Solved in</div>
       </div>
       <div className="text-center p-4 rounded-lg border bg-card">
         <NeomorphicIcon className="mx-auto mb-2">
-          <Route className="w-5 h-5" />
+          <Package className="w-5 h-5" />
         </NeomorphicIcon>
         <div className="text-xl font-bold">{totalBoxes || gridPositions.length}</div>
         <div className="text-sm text-muted-foreground">Boxes Packed</div>
@@ -43,6 +43,9 @@ export const WarehouseStats: React.FC<WarehouseStatsProps> = ({
         <div className="text-sm text-muted-foreground">Space Efficiency</div>
       </div>
       <div className="text-center p-4 rounded-lg border bg-card">
+        <NeomorphicIcon className="mx-auto mb-2">
+          <Route className="w-5 h-5" />
+        </NeomorphicIcon>
         <div className="text-xl font-bold">{timeEfficiency}%</div>
         <div className="text-sm text-muted-foreground">Time Efficiency</div>
       </div>

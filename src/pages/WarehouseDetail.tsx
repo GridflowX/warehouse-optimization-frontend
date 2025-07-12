@@ -1,11 +1,12 @@
 // Warehouse Detail Page - Algorithm and Configuration Interface
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { StorageConfig, AlgorithmData } from '@/types/warehouse';
 import { WarehouseHeader } from '@/components/WarehouseHeader';
 import { WarehouseLayout } from '@/components/WarehouseLayout';
 import { WarehouseStats } from '@/components/WarehouseStats';
+import { generateRandomWarehouseData, createDataFiles } from '@/services/dataGeneration';
 
 const WarehouseDetail: React.FC = () => {
   const { warehouseId } = useParams<{ warehouseId: string }>();
@@ -13,6 +14,23 @@ const WarehouseDetail: React.FC = () => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [packagingData, setPackagingData] = useState<AlgorithmData | null>(null);
   const [retrievalData, setRetrievalData] = useState<AlgorithmData | null>(null);
+
+  // Generate random data on component mount
+  useEffect(() => {
+    const defaultConfig: StorageConfig = {
+      storageWidth: 1000,
+      storageLength: 2000,
+      numberOfRectangles: 50,
+      minimumSideLength: 50,
+      maximumSideLength: 200,
+      clearance: 20
+    };
+    
+    const { packagingData: initialPackaging, retrievalData: initialRetrieval } = generateRandomWarehouseData(defaultConfig);
+    setPackagingData(initialPackaging);
+    setRetrievalData(initialRetrieval);
+    setCurrentConfig(defaultConfig);
+  }, []);
 
   const handleConfigSave = (config: StorageConfig) => {
     setCurrentConfig(config);

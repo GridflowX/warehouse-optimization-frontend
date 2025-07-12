@@ -5,9 +5,9 @@ import { cn } from '@/lib/utils';
 
 export const CompanyLogo: React.FC = () => {
   return (
-    <div className="relative w-24 h-24 flex items-center justify-center mx-auto rounded-full border-4 border-black bg-transparent overflow-hidden shadow-md">
+    <div className="relative w-24 h-24 flex items-center justify-center mx-auto rounded-full border-4 border-foreground bg-transparent overflow-hidden shadow-md">
       {/* Solid blurred background fill */}
-      <div className="absolute inset-0 rounded-full bg-yellow-200 blur-2xl opacity-100 z-0" />
+      <div className="absolute inset-0 rounded-full bg-background blur-2xl opacity-100 z-0" />
       <img
         src="/gridflow_logo.png"
         alt="GridFlow Logo"
