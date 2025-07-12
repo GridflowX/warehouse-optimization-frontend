@@ -3,19 +3,46 @@
 import React, { useMemo } from 'react';
 import { Coordinate, Edge } from '@/types/api';
 import { WarehouseNode } from './WarehouseNode';
+import { TrafficPod } from './TrafficPod';
+
+interface OptimizationNode {
+  id: number;
+  x: number;
+  y: number;
+  type: 'station' | 'steiner';
+}
+
+interface OptimizationEdge {
+  source: number;
+  target: number;
+  length: number;
+}
+
+interface Flow {
+  commodity: number;
+  source: number;
+  target: number;
+  flow: number;
+}
 
 interface GraphCanvasProps {
   warehouses: Coordinate[];
   edges: Edge[];
   onWarehouseClick: (warehouseId: string) => void;
   selectedWarehouse?: string;
+  optimizationData?: {
+    nodes: OptimizationNode[];
+    edges: OptimizationEdge[];
+    flows: Flow[];
+  };
 }
 
 export const GraphCanvas: React.FC<GraphCanvasProps> = ({
   warehouses,
   edges,
   onWarehouseClick,
-  selectedWarehouse
+  selectedWarehouse,
+  optimizationData
 }) => {
   // Calculate canvas bounds with proper coordinate system starting at (0,0)
   const bounds = useMemo(() => {
@@ -38,24 +65,34 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
     };
   }, [warehouses]);
 
-  // Grid scale: 1cm = ~37.8 pixels (96 DPI standard)
-  const gridSpacing = 38; // pixels per cm
-
-  // Generate all possible connections (dense graph)
+  // Generate connections based on optimization data or default warehouse connections
+  const gridSpacing = 50;
   const allConnections = useMemo(() => {
-    const connections: Array<{ from: Coordinate; to: Coordinate }> = [];
+    if (optimizationData?.edges && optimizationData?.nodes) {
+      return optimizationData.edges.map(edge => {
+        const sourceNode = optimizationData.nodes.find(n => n.id === edge.source);
+        const targetNode = optimizationData.nodes.find(n => n.id === edge.target);
+        return {
+          from: sourceNode ? { id: sourceNode.id.toString(), x: sourceNode.x * 100, y: sourceNode.y * 100 } : null,
+          to: targetNode ? { id: targetNode.id.toString(), x: targetNode.x * 100, y: targetNode.y * 100 } : null,
+          isBold: true
+        };
+      }).filter(conn => conn.from && conn.to);
+    }
     
+    // Default warehouse connections
+    const connections = [];
     for (let i = 0; i < warehouses.length; i++) {
       for (let j = i + 1; j < warehouses.length; j++) {
         connections.push({
           from: warehouses[i],
-          to: warehouses[j]
+          to: warehouses[j],
+          isBold: false
         });
       }
     }
-    
     return connections;
-  }, [warehouses]);
+  }, [warehouses, optimizationData]);
 
   return (
     <div 
@@ -75,25 +112,45 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
         {/* Grid lines */}
         <defs>
           <pattern id="grid" width={gridSpacing} height={gridSpacing} patternUnits="userSpaceOnUse">
-            <path d={`M ${gridSpacing} 0 L 0 0 0 ${gridSpacing}`} fill="none" stroke="currentColor" strokeWidth="0.5" className="text-primary/30"/>
+            <path d={`M ${gridSpacing} 0 L 0 0 0 ${gridSpacing}`} fill="none" stroke="hsl(var(--primary))" strokeWidth="0.5" opacity="0.3"/>
           </pattern>
         </defs>
         <rect width="100%" height="100%" fill="url(#grid)" />
         
-        {/* Draw all possible connections as dotted lines */}
+        {/* Draw connections - bold for optimization data, dotted for default */}
         {allConnections.map((connection, index) => (
           <line
-            key={`connection-${index}`}
+            key={index}
             x1={connection.from.x}
             y1={connection.from.y}
             x2={connection.to.x}
             y2={connection.to.y}
-            stroke="hsl(var(--primary))"
-            strokeWidth="1"
-            strokeDasharray="3,3"
-            opacity="0.4"
+            stroke={connection.isBold ? "hsl(var(--primary))" : "hsl(var(--primary))"}
+            strokeWidth={connection.isBold ? "3" : "1"}
+            strokeDasharray={connection.isBold ? "none" : "5,5"}
+            opacity={connection.isBold ? "0.8" : "0.3"}
           />
         ))}
+
+        {/* Traffic pods for flows */}
+        {optimizationData?.flows?.map((flow, index) => {
+          const sourceNode = optimizationData.nodes.find(n => n.id === flow.source);
+          const targetNode = optimizationData.nodes.find(n => n.id === flow.target);
+          
+          if (!sourceNode || !targetNode) return null;
+          
+          return (
+            <TrafficPod
+              key={`${flow.commodity}-${flow.source}-${flow.target}-${index}`}
+              source={{ x: sourceNode.x * 100, y: sourceNode.y * 100 }}
+              target={{ x: targetNode.x * 100, y: targetNode.y * 100 }}
+              flow={flow.flow}
+              commodity={flow.commodity}
+              pathId={`${flow.source}-${flow.target}`}
+            />
+          );
+        })}
+
         {warehouses.map((warehouse) => (
           <WarehouseNode
             key={warehouse.id}

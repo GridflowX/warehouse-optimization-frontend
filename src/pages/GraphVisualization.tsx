@@ -12,7 +12,7 @@ import { OptimizationRequest } from '@/types/api';
 
 const GraphVisualization: React.FC = () => {
   const navigate = useNavigate();
-  const { graphData, loading, error, optimizeParameters } = useGraphData();
+  const { graphData, optimizationData, loading, error, optimizeParameters } = useGraphData();
   const [optimizing, setOptimizing] = useState(false);
 
   const handleWarehouseClick = useCallback((warehouseId: string) => {
@@ -112,6 +112,8 @@ const GraphVisualization: React.FC = () => {
                 warehouses={graphData.coordinates}
                 edges={graphData.edges}
                 onWarehouseClick={handleWarehouseClick}
+                selectedWarehouse={undefined}
+                optimizationData={optimizationData}
               />
             </div>
             {/* Optimization Controls and Statistics */}

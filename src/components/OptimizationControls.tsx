@@ -16,8 +16,8 @@ export const OptimizationControls: React.FC<OptimizationControlsProps> = ({
   onOptimize,
   loading = false
 }) => {
-  const [alpha, setAlpha] = useState(0.5);
-  const [beta, setBeta] = useState(0.5);
+  const [alpha, setAlpha] = useState(0.500);
+  const [beta, setBeta] = useState(0.500);
 
   const handleAlphaChange = useCallback((value: number[]) => {
     const newAlpha = value[0];
@@ -53,8 +53,8 @@ export const OptimizationControls: React.FC<OptimizationControlsProps> = ({
           </div>
           <Slider
             id="alpha-slider"
-            min={0}
-            max={1}
+            min={0.001}
+            max={1.000}
             step={0.001}
             value={[alpha]}
             onValueChange={handleAlphaChange}
@@ -74,8 +74,8 @@ export const OptimizationControls: React.FC<OptimizationControlsProps> = ({
           </div>
           <Slider
             id="beta-slider"
-            min={0}
-            max={1}
+            min={0.001}
+            max={1.000}
             step={0.001}
             value={[beta]}
             onValueChange={handleBetaChange}

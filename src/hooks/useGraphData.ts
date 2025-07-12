@@ -8,6 +8,7 @@ import { saveGraphData, loadGraphData } from '@/hooks/useLocalStorage';
 
 export const useGraphData = () => {
   const [graphData, setGraphData] = useState<GraphData | null>(null);
+  const [optimizationData, setOptimizationData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
@@ -45,6 +46,14 @@ export const useGraphData = () => {
     try {
       const response = await ApiService.optimizeParameters(params);
       if (response.success) {
+        // Fetch optimization output after successful input
+        try {
+          const outputData = await ApiService.getOptimizationOutput();
+          setOptimizationData(outputData);
+        } catch (outputError) {
+          console.warn('Could not fetch optimization output:', outputError);
+        }
+        
         toast({
           title: "Optimization Successful",
           description: response.message || "Parameters optimized successfully",
@@ -68,6 +77,7 @@ export const useGraphData = () => {
 
   return {
     graphData,
+    optimizationData,
     loading,
     error,
     refetch: fetchGraphData,

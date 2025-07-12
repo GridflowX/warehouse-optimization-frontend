@@ -3,7 +3,7 @@
 import { GraphData, OptimizationRequest, OptimizationResponse } from '@/types/api';
 import { useMockData } from './mockData';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = 'https://guideway-optimisation.onrender.com';
 const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK !== 'false'; // Default to true for development
 
 export class ApiService {
@@ -43,29 +43,28 @@ export class ApiService {
   }
 
   static async optimizeParameters(params: OptimizationRequest): Promise<OptimizationResponse> {
-    // Use mock response for development if backend is not available
-    if (USE_MOCK_DATA) {
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve({
-            success: true,
-            message: `Optimization completed with Alpha: ${params.alpha.toFixed(3)}, Beta: ${params.beta.toFixed(3)}`
-          });
-        }, 1500);
-      });
-    }
-    
     try {
-      return this.request<OptimizationResponse>('/api/optimize', {
+      await this.request<any>('/inputs', {
         method: 'POST',
-        body: JSON.stringify(params),
+        body: JSON.stringify({ alpha: params.alpha, beta: params.beta }),
       });
-    } catch (error) {
-      console.warn('Backend not available, using mock response:', error);
+      
       return {
         success: true,
-        message: `Optimization completed (mock) with Alpha: ${params.alpha.toFixed(3)}, Beta: ${params.beta.toFixed(3)}`
+        message: `Optimization completed with Alpha: ${params.alpha.toFixed(3)}, Beta: ${params.beta.toFixed(3)}`
       };
+    } catch (error) {
+      console.error('Error sending optimization parameters:', error);
+      throw error;
+    }
+  }
+
+  static async getOptimizationOutput(): Promise<any> {
+    try {
+      return this.request<any>('/output');
+    } catch (error) {
+      console.error('Error fetching optimization output:', error);
+      throw error;
     }
   }
 
