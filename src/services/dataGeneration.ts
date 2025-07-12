@@ -1,5 +1,6 @@
 import { AlgorithmData, AlgorithmBox, StorageConfig } from '@/types/warehouse';
-import { hasOverlap, calculateShortestPathToEdge } from '@/utils/gridUtils';
+import { hasOverlap } from '@/utils/gridUtils';
+import { PRMPathPlanner } from './pathPlanning';
 
 /**
  * Find a valid position for a box without overlaps
@@ -59,13 +60,6 @@ export const generateRandomWarehouseData = (config: StorageConfig): {
     if (position) {
       const { x, y } = position;
       
-      // Generate shortest path to nearest edge
-      const exitPoint = calculateShortestPathToEdge(
-        { x, y, width, height },
-        config.storageWidth,
-        config.storageLength
-      );
-      
       const box: AlgorithmBox = {
         index: i,
         width,
@@ -74,11 +68,7 @@ export const generateRandomWarehouseData = (config: StorageConfig): {
         y,
         packed: true,
         retrieval_order: packedCount + 1,
-        path: [
-          { step: 0, x, y },
-          { step: 1, x: x + width / 2, y: y + height / 2 },
-          { step: 2, x: exitPoint.x, y: exitPoint.y }
-        ]
+        path: [] // Will be generated later using PRM + A*
       };
       
       packagingData.push(box);
@@ -106,6 +96,25 @@ export const generateRandomWarehouseData = (config: StorageConfig): {
   }
   
   console.log(`Successfully placed ${packedCount} out of ${config.numberOfRectangles} boxes`);
+  
+  // Use PRM + A* pathfinding for sophisticated retrieval paths
+  if (packedCount > 0) {
+    console.log('Generating sophisticated retrieval paths using PRM + A*...');
+    const pathPlanner = new PRMPathPlanner(
+      config.storageWidth,
+      config.storageLength,
+      packagingData,
+      config.clearance
+    );
+
+    packagingData.forEach((box) => {
+      if (box.packed) {
+        const sophisticatedPath = pathPlanner.findOptimalRetrievalPath(box);
+        box.path = sophisticatedPath;
+        console.log(`Generated ${sophisticatedPath.length}-step path for box ${box.index}`);
+      }
+    });
+  }
   
   return { packagingData, retrievalData, packedCount };
 };
