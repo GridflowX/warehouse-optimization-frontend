@@ -31,10 +31,24 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
   const [animatedBoxes, setAnimatedBoxes] = useState<AnimatedBox[]>([]);
   const [animationSpeed, setAnimationSpeed] = useState(500); // milliseconds per step
   const [isRetrievalMode, setIsRetrievalMode] = useState(false);
+  const [gridDimensions, setGridDimensions] = useState({ width: 1000, height: 2000 });
+
+  // Transform coordinate system: (0,0) is bottom-left
+  const transformY = (y: number) => gridDimensions.height - y;
 
   // Initialize boxes when algorithm data changes
   useEffect(() => {
     if (algorithmData) {
+      // Calculate grid dimensions from the algorithm data
+      let maxX = 1000, maxY = 2000;
+      algorithmData.forEach(box => {
+        box.path.forEach(step => {
+          maxX = Math.max(maxX, step.x + 100);
+          maxY = Math.max(maxY, step.y + 100);
+        });
+      });
+      setGridDimensions({ width: maxX, height: maxY });
+
       const boxes: AnimatedBox[] = algorithmData.map((box) => {
         const finalPos = box.path[box.path.length - 1] || { x: 0, y: 0 };
         return {
@@ -170,28 +184,10 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
     }
   };
 
-  // Calculate viewBox based on algorithm data
+  // Calculate viewBox based on grid dimensions
   const getViewBox = () => {
-    if (!algorithmData || algorithmData.length === 0) {
-      return "0 0 1000 2000";
-    }
-
-    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-    
-    algorithmData.forEach(box => {
-      box.path.forEach(step => {
-        minX = Math.min(minX, step.x);
-        maxX = Math.max(maxX, step.x);
-        minY = Math.min(minY, step.y);
-        maxY = Math.max(maxY, step.y);
-      });
-    });
-
     const padding = 100;
-    const width = maxX - minX + 2 * padding;
-    const height = maxY - minY + 2 * padding;
-    
-    return `${minX - padding} ${minY - padding} ${width} ${height}`;
+    return `${-padding} ${-padding} ${gridDimensions.width + 2 * padding} ${gridDimensions.height + 2 * padding}`;
   };
 
   return (
@@ -254,12 +250,33 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
           </defs>
           <rect width="100%" height="100%" fill="url(#grid)" />
           
+          {/* Storage container boundary */}
+          <rect
+            x="0"
+            y="0"
+            width={gridDimensions.width}
+            height={gridDimensions.height}
+            fill="none"
+            stroke="hsl(var(--primary))"
+            strokeWidth="3"
+            strokeDasharray="10,5"
+            opacity="0.5"
+          />
+
+          {/* Coordinate labels */}
+          <text x="10" y={gridDimensions.height - 10} fill="hsl(var(--foreground))" fontSize="12" fontWeight="bold">
+            (0,0)
+          </text>
+          <text x={gridDimensions.width - 50} y="25" fill="hsl(var(--foreground))" fontSize="12" fontWeight="bold">
+            ({gridDimensions.width},{gridDimensions.height})
+          </text>
+
           {/* Animated boxes */}
           {animatedBoxes.filter(box => box.isVisible).map((box) => (
             <g key={box.id}>
               <rect
                 x={box.x - box.width/2}
-                y={box.y - box.height/2}
+                y={transformY(box.y + box.height/2)}
                 width={box.width}
                 height={box.height}
                 fill={box.isRemoving ? "hsl(var(--destructive) / 0.8)" : "hsl(var(--primary) / 0.8)"}
@@ -270,7 +287,7 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
               />
               <text
                 x={box.x}
-                y={box.y + 3}
+                y={transformY(box.y - 3)}
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fill="hsl(var(--primary-foreground))"

@@ -20,6 +20,9 @@ export const PackagingGrid: React.FC<PackagingGridProps> = ({ config, algorithmD
   const [boxes, setBoxes] = useState<GridBox[]>([]);
   const [gridDimensions, setGridDimensions] = useState({ width: 0, height: 0 });
 
+  // Transform coordinate system: (0,0) is bottom-left
+  const transformY = (y: number) => gridDimensions.height - y;
+
   useEffect(() => {
     // Calculate grid dimensions based on configuration
     const gridWidth = config.storageWidth;
@@ -113,7 +116,7 @@ export const PackagingGrid: React.FC<PackagingGridProps> = ({ config, algorithmD
             <g key={box.id}>
               <rect
                 x={box.x}
-                y={box.y}
+                y={transformY(box.y + box.height)}
                 width={box.width}
                 height={box.height}
                 fill="hsl(var(--primary) / 0.7)"
@@ -124,7 +127,7 @@ export const PackagingGrid: React.FC<PackagingGridProps> = ({ config, algorithmD
               />
               <text
                 x={box.x + box.width / 2}
-                y={box.y + box.height / 2}
+                y={transformY(box.y + box.height / 2)}
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fill="hsl(var(--primary-foreground))"
@@ -137,10 +140,10 @@ export const PackagingGrid: React.FC<PackagingGridProps> = ({ config, algorithmD
           ))}
           
           {/* Coordinate labels */}
-          <text x="10" y="25" fill="hsl(var(--foreground))" fontSize="12" fontWeight="bold">
+          <text x="10" y={gridDimensions.height - 10} fill="hsl(var(--foreground))" fontSize="12" fontWeight="bold">
             (0,0)
           </text>
-          <text x={gridDimensions.width - 50} y={gridDimensions.height - 10} fill="hsl(var(--foreground))" fontSize="12" fontWeight="bold">
+          <text x={gridDimensions.width - 50} y="25" fill="hsl(var(--foreground))" fontSize="12" fontWeight="bold">
             ({gridDimensions.width},{gridDimensions.height})
           </text>
         </svg>
