@@ -69,9 +69,13 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
     }
 
     const timer = setTimeout(() => {
-      const boxToRetrieve = retrievalData.find(box => box.retrieval_order === currentStep);
+      // Retrieval order starts from 1, but currentStep starts from 0
+      const boxToRetrieve = retrievalData.find(box => box.retrieval_order === currentStep + 1);
       if (boxToRetrieve) {
+        console.log(`Retrieving box ${boxToRetrieve.index} (order ${boxToRetrieve.retrieval_order}) with ${boxToRetrieve.path?.length || 0} path steps`);
         animateBoxRetrieval(boxToRetrieve);
+      } else {
+        console.log(`No box found for retrieval order ${currentStep + 1}`);
       }
       setCurrentStep(prev => prev + 1);
     }, animationSpeed);
@@ -137,6 +141,11 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
   };
 
   const handlePlay = () => {
+    console.log('Starting animation with:', { 
+      packagingData: packagingData?.length || 0, 
+      retrievalData: retrievalData?.length || 0,
+      animatedBoxes: animatedBoxes.length 
+    });
     setIsPlaying(true);
     if (!isRetrievalMode) {
       setIsRetrievalMode(true);

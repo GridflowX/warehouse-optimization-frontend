@@ -56,11 +56,13 @@ export const StorageGridConfig: React.FC<StorageGridConfigProps> = ({
     setRetrievalFile(retrievalFile);
     setConfig(prev => ({ ...prev, boxData: packagingFile }));
     
+    // Pass both datasets to the parent components
     onPackagingData?.(packagingData);
+    onRetrievalData?.(retrievalData);
     
     toast({
       title: "Random data generated",
-      description: `Generated ${packagingData.length} boxes, ${packedCount} successfully placed with ${config.clearance}mm clearance.`
+      description: `Generated ${packagingData.length} boxes, ${packedCount} successfully placed with optimized retrieval paths.`
     });
   };
 
