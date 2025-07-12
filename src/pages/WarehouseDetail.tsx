@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { StorageConfig, AlgorithmData } from '@/components/StorageGridConfig';
+import { StorageConfig, AlgorithmData } from '@/types/warehouse';
 import { WarehouseHeader } from '@/components/WarehouseHeader';
 import { WarehouseLayout } from '@/components/WarehouseLayout';
 import { WarehouseStats } from '@/components/WarehouseStats';

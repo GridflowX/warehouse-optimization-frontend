@@ -1,27 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { AlgorithmData, AlgorithmBox } from '@/components/StorageGridConfig';
+import { AlgorithmData, AlgorithmBox, AnimatedBox, GridDimensions } from '@/types/warehouse';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, RotateCcw, Package } from 'lucide-react';
+import { transformY, calculateGridDimensions } from '@/utils/gridUtils';
 
 interface AnimatedStorageGridProps {
   algorithmData: AlgorithmData | null;
   onAnimationComplete?: () => void;
-}
-
-interface AnimatedBox {
-  id: string;
-  x: number;
-  y: number;
-  isVisible: boolean;
-  isAnimating: boolean;
-  finalX: number;
-  finalY: number;
-  width: number;
-  height: number;
-  isRemoving: boolean;
-  pathIndex: number;
-  index: number;
-  packed: boolean;
 }
 
 export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
@@ -33,27 +18,24 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
   const [animatedBoxes, setAnimatedBoxes] = useState<AnimatedBox[]>([]);
   const [animationSpeed, setAnimationSpeed] = useState(500); // milliseconds per step
   const [isRetrievalMode, setIsRetrievalMode] = useState(false);
-  const [gridDimensions, setGridDimensions] = useState({ width: 1000, height: 2000 });
-
-  // Transform coordinate system: (0,0) is bottom-left
-  const transformY = (y: number) => gridDimensions.height - y;
+  const [gridDimensions, setGridDimensions] = useState<GridDimensions>({ width: 1000, height: 2000 });
 
   // Initialize boxes when algorithm data changes
   useEffect(() => {
     if (algorithmData) {
       // Calculate grid dimensions from the algorithm data
-      let maxX = 1000, maxY = 2000;
+      const dimensions = calculateGridDimensions(1000, 2000, algorithmData, 100);
+      
       algorithmData.forEach(box => {
-        maxX = Math.max(maxX, box.x + box.width + 100);
-        maxY = Math.max(maxY, box.y + box.height + 100);
         if (box.path) {
           box.path.forEach(step => {
-            maxX = Math.max(maxX, step.x + 100);
-            maxY = Math.max(maxY, step.y + 100);
+            if (step.x > 0) dimensions.width = Math.max(dimensions.width, step.x + 100);
+            if (step.y > 0) dimensions.height = Math.max(dimensions.height, step.y + 100);
           });
         }
       });
-      setGridDimensions({ width: maxX, height: maxY });
+      
+      setGridDimensions(dimensions);
 
       const boxes: AnimatedBox[] = algorithmData
         .filter((box) => box.packed) // Only show packed boxes
@@ -286,7 +268,7 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
             <g key={box.id}>
               <rect
                 x={box.x}
-                y={transformY(box.y + box.height)}
+                y={transformY(box.y + box.height, gridDimensions.height)}
                 width={box.width}
                 height={box.height}
                 fill={box.isRemoving ? "hsl(var(--destructive) / 0.8)" : "hsl(var(--primary) / 0.8)"}
@@ -297,7 +279,7 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
               />
               <text
                 x={box.x + box.width / 2}
-                y={transformY(box.y + box.height / 2)}
+                y={transformY(box.y + box.height / 2, gridDimensions.height)}
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fill="hsl(var(--primary-foreground))"

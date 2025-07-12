@@ -1,33 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { StorageConfig, AlgorithmData } from './StorageGridConfig';
+import { StorageConfig, AlgorithmData, GridBox, GridDimensions } from '@/types/warehouse';
+import { transformY, calculateViewBox, calculateGridDimensions } from '@/utils/gridUtils';
 
 interface PackagingGridProps {
   config: StorageConfig;
   algorithmData?: AlgorithmData | null;
 }
 
-interface GridBox {
-  id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  index: number;
-  packed: boolean;
-}
-
 export const PackagingGrid: React.FC<PackagingGridProps> = ({ config, algorithmData }) => {
   const [boxes, setBoxes] = useState<GridBox[]>([]);
-  const [gridDimensions, setGridDimensions] = useState({ width: 0, height: 0 });
-
-  // Transform coordinate system: (0,0) is bottom-left
-  const transformY = (y: number) => gridDimensions.height - y;
+  const [gridDimensions, setGridDimensions] = useState<GridDimensions>({ width: 0, height: 0 });
 
   useEffect(() => {
     // Calculate grid dimensions based on configuration
-    const gridWidth = config.storageWidth;
-    const gridHeight = config.storageLength;
-    setGridDimensions({ width: gridWidth, height: gridHeight });
+    const dimensions = calculateGridDimensions(config.storageWidth, config.storageLength);
+    setGridDimensions(dimensions);
 
     // Initialize boxes from algorithm data
     if (algorithmData) {
@@ -45,22 +32,12 @@ export const PackagingGrid: React.FC<PackagingGridProps> = ({ config, algorithmD
         .sort((a, b) => a.index - b.index); // Sort by index for proper placement order
       
       setBoxes(initialBoxes);
+    } else {
+      setBoxes([]);
     }
   }, [config, algorithmData]);
 
-  const calculateViewBox = () => {
-    if (boxes.length === 0) {
-      return `0 0 ${gridDimensions.width} ${gridDimensions.height}`;
-    }
-    
-    const padding = 50;
-    const minX = Math.min(0, ...boxes.map(box => box.x)) - padding;
-    const minY = Math.min(0, ...boxes.map(box => box.y)) - padding;
-    const maxX = Math.max(gridDimensions.width, ...boxes.map(box => box.x + box.width)) + padding;
-    const maxY = Math.max(gridDimensions.height, ...boxes.map(box => box.y + box.height)) + padding;
-    
-    return `${minX} ${minY} ${maxX - minX} ${maxY - minY}`;
-  };
+  const viewBox = calculateViewBox(boxes, gridDimensions);
 
   return (
     <div className="w-full h-full border border-border rounded-lg bg-card p-4">
@@ -70,7 +47,7 @@ export const PackagingGrid: React.FC<PackagingGridProps> = ({ config, algorithmD
         <svg
           width="100%"
           height="100%"
-          viewBox={calculateViewBox()}
+          viewBox={viewBox}
           className="border border-muted"
         >
           {/* Grid background */}
@@ -115,7 +92,7 @@ export const PackagingGrid: React.FC<PackagingGridProps> = ({ config, algorithmD
             <g key={box.id}>
               <rect
                 x={box.x}
-                y={transformY(box.y + box.height)}
+                y={transformY(box.y + box.height, gridDimensions.height)}
                 width={box.width}
                 height={box.height}
                 fill="hsl(var(--primary) / 0.7)"
@@ -126,7 +103,7 @@ export const PackagingGrid: React.FC<PackagingGridProps> = ({ config, algorithmD
               />
               <text
                 x={box.x + box.width / 2}
-                y={transformY(box.y + box.height / 2)}
+                y={transformY(box.y + box.height / 2, gridDimensions.height)}
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fill="hsl(var(--primary-foreground))"
@@ -138,7 +115,7 @@ export const PackagingGrid: React.FC<PackagingGridProps> = ({ config, algorithmD
               {/* Show coordinates for debugging */}
               <text
                 x={box.x + 2}
-                y={transformY(box.y) - 2}
+                y={transformY(box.y, gridDimensions.height) - 2}
                 fill="hsl(var(--muted-foreground))"
                 fontSize="10"
               >

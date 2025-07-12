@@ -1,7 +1,8 @@
 import React from 'react';
-import { StorageGridConfig, StorageConfig, AlgorithmData } from '@/components/StorageGridConfig';
+import { StorageGridConfig } from '@/components/StorageGridConfig';
 import { AnimatedStorageGrid } from '@/components/AnimatedStorageGrid';
 import { PackagingGrid } from '@/components/PackagingGrid';
+import { StorageConfig, AlgorithmData } from '@/types/warehouse';
 
 interface WarehouseLayoutProps {
   algorithmData: AlgorithmData | null;
