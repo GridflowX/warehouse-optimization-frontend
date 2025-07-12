@@ -7,6 +7,7 @@ import { WarehouseHeader } from '@/components/WarehouseHeader';
 import { WarehouseLayout } from '@/components/WarehouseLayout';
 import { WarehouseStats } from '@/components/WarehouseStats';
 import { generateRandomWarehouseData, createDataFiles } from '@/services/dataGeneration';
+import { saveWarehouseData, loadWarehouseData } from '@/hooks/useLocalStorage';
 
 const WarehouseDetail: React.FC = () => {
   const { warehouseId } = useParams<{ warehouseId: string }>();
@@ -15,22 +16,41 @@ const WarehouseDetail: React.FC = () => {
   const [packagingData, setPackagingData] = useState<AlgorithmData | null>(null);
   const [retrievalData, setRetrievalData] = useState<AlgorithmData | null>(null);
 
-  // Generate random data on component mount
+  // Load data from localStorage or generate new data
   useEffect(() => {
-    const defaultConfig: StorageConfig = {
-      storageWidth: 1000,
-      storageLength: 2000,
-      numberOfRectangles: 50,
-      minimumSideLength: 50,
-      maximumSideLength: 200,
-      clearance: 20
-    };
+    if (!warehouseId) return;
     
-    const { packagingData: initialPackaging, retrievalData: initialRetrieval } = generateRandomWarehouseData(defaultConfig);
-    setPackagingData(initialPackaging);
-    setRetrievalData(initialRetrieval);
-    setCurrentConfig(defaultConfig);
-  }, []);
+    // Try to load from localStorage first
+    const cachedData = loadWarehouseData(warehouseId);
+    
+    if (cachedData) {
+      setPackagingData(cachedData.packagingData);
+      setRetrievalData(cachedData.retrievalData);
+      setCurrentConfig(cachedData.config);
+    } else {
+      // Generate new data if not in cache
+      const defaultConfig: StorageConfig = {
+        storageWidth: 1000,
+        storageLength: 2000,
+        numberOfRectangles: 50,
+        minimumSideLength: 50,
+        maximumSideLength: 200,
+        clearance: 20
+      };
+      
+      const { packagingData: initialPackaging, retrievalData: initialRetrieval } = generateRandomWarehouseData(defaultConfig);
+      setPackagingData(initialPackaging);
+      setRetrievalData(initialRetrieval);
+      setCurrentConfig(defaultConfig);
+      
+      // Save to localStorage
+      saveWarehouseData(warehouseId, {
+        packagingData: initialPackaging,
+        retrievalData: initialRetrieval,
+        config: defaultConfig
+      });
+    }
+  }, [warehouseId]);
 
   const handleConfigSave = (config: StorageConfig) => {
     setCurrentConfig(config);
@@ -51,10 +71,24 @@ const WarehouseDetail: React.FC = () => {
 
   const handlePackagingData = (data: AlgorithmData) => {
     setPackagingData(data);
+    if (warehouseId && retrievalData && currentConfig) {
+      saveWarehouseData(warehouseId, {
+        packagingData: data,
+        retrievalData,
+        config: currentConfig
+      });
+    }
   };
 
   const handleRetrievalData = (data: AlgorithmData) => {
     setRetrievalData(data);
+    if (warehouseId && packagingData && currentConfig) {
+      saveWarehouseData(warehouseId, {
+        packagingData,
+        retrievalData: data,
+        config: currentConfig
+      });
+    }
   };
 
   // Generate grid positions for storage bins

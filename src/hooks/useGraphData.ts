@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { GraphData, OptimizationRequest } from '@/types/api';
 import { ApiService } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
+import { saveGraphData, loadGraphData } from '@/hooks/useLocalStorage';
 
 export const useGraphData = () => {
   const [graphData, setGraphData] = useState<GraphData | null>(null);
@@ -15,8 +16,18 @@ export const useGraphData = () => {
     try {
       setLoading(true);
       setError(null);
+      
+      // Try to load from localStorage first
+      const cachedData = loadGraphData();
+      if (cachedData) {
+        setGraphData(cachedData);
+        setLoading(false);
+        return;
+      }
+      
       const data = await ApiService.getGraphData();
       setGraphData(data);
+      saveGraphData(data); // Save to localStorage
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch graph data';
       setError(errorMessage);
