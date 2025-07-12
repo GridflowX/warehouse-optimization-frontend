@@ -31,11 +31,13 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
 
       const boxes: AnimatedBox[] = packagingData
         .filter((box) => {
-          // Only show packed boxes with valid coordinates
-          return box.packed && 
-                 box.x !== null && box.x !== undefined &&
+          // Only show boxes with valid coordinates
+          return box.x !== null && box.x !== undefined &&
                  box.y !== null && box.y !== undefined &&
-                 !isNaN(box.x) && !isNaN(box.y);
+                 !isNaN(box.x) && !isNaN(box.y) &&
+                 box.width !== null && box.width !== undefined &&
+                 box.height !== null && box.height !== undefined &&
+                 !isNaN(box.width) && !isNaN(box.height);
         })
         .map((box) => ({
           id: `box-${box.index}`,
@@ -50,7 +52,7 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
           isRemoving: false,
           pathIndex: 0,
           index: box.index,
-          packed: box.packed,
+          packed: box.packed !== false, // Default to true if not specified
         }))
         .sort((a, b) => a.index - b.index);
       setAnimatedBoxes(boxes);
@@ -69,13 +71,13 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
     }
 
     const timer = setTimeout(() => {
-      // Retrieval order starts from 1, but currentStep starts from 0
-      const boxToRetrieve = retrievalData.find(box => box.retrieval_order === currentStep + 1);
+      // In new format, we'll retrieve boxes by their index order
+      const boxToRetrieve = retrievalData[currentStep];
       if (boxToRetrieve) {
-        console.log(`Retrieving box ${boxToRetrieve.index} (order ${boxToRetrieve.retrieval_order}) with ${boxToRetrieve.path?.length || 0} path steps`);
+        console.log(`Retrieving box ${boxToRetrieve.index} with ${boxToRetrieve.path?.length || 0} path steps`);
         animateBoxRetrieval(boxToRetrieve);
       } else {
-        console.log(`No box found for retrieval order ${currentStep + 1}`);
+        console.log(`No box found for step ${currentStep}`);
       }
       setCurrentStep(prev => prev + 1);
     }, animationSpeed);
@@ -163,11 +165,13 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
     if (packagingData) {
       const resetBoxes: AnimatedBox[] = packagingData
         .filter((box) => {
-          // Only show packed boxes with valid coordinates
-          return box.packed && 
-                 box.x !== null && box.x !== undefined &&
+          // Only show boxes with valid coordinates
+          return box.x !== null && box.x !== undefined &&
                  box.y !== null && box.y !== undefined &&
-                 !isNaN(box.x) && !isNaN(box.y);
+                 !isNaN(box.x) && !isNaN(box.y) &&
+                 box.width !== null && box.width !== undefined &&
+                 box.height !== null && box.height !== undefined &&
+                 !isNaN(box.width) && !isNaN(box.height);
         })
         .map((box) => ({
           id: `box-${box.index}`,
@@ -182,7 +186,7 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
           isRemoving: false,
           pathIndex: 0,
           index: box.index,
-          packed: box.packed,
+          packed: box.packed !== false, // Default to true if not specified
         }))
         .sort((a, b) => a.index - b.index);
       setAnimatedBoxes(resetBoxes);

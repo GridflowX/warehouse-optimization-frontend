@@ -18,13 +18,23 @@ export const PackagingGrid: React.FC<PackagingGridProps> = ({ config, algorithmD
 
     // Initialize boxes from algorithm data
     if (algorithmData) {
+      console.log('PackagingGrid received algorithm data length:', algorithmData.length);
+      console.log('PackagingGrid received algorithm data:', algorithmData);
+      
       const initialBoxes = algorithmData
         .filter((boxData) => {
-          // Only show packed boxes with valid coordinates
-          return boxData.packed && 
-                 boxData.x !== null && boxData.x !== undefined &&
+          // Only show boxes with valid coordinates
+          const isValid = boxData.x !== null && boxData.x !== undefined &&
                  boxData.y !== null && boxData.y !== undefined &&
-                 !isNaN(boxData.x) && !isNaN(boxData.y);
+                 !isNaN(boxData.x) && !isNaN(boxData.y) &&
+                 boxData.width !== null && boxData.width !== undefined &&
+                 boxData.height !== null && boxData.height !== undefined &&
+                 !isNaN(boxData.width) && !isNaN(boxData.height);
+          
+          if (!isValid) {
+            console.log('Filtered out box:', boxData);
+          }
+          return isValid;
         })
         .map((boxData) => ({
           id: `box-${boxData.index}`,
@@ -33,12 +43,15 @@ export const PackagingGrid: React.FC<PackagingGridProps> = ({ config, algorithmD
           width: boxData.width,
           height: boxData.height,
           index: boxData.index,
-          packed: boxData.packed
+          packed: boxData.packed !== false // Default to true if not specified
         }))
         .sort((a, b) => a.index - b.index); // Sort by index for proper placement order
       
+      console.log('PackagingGrid processed boxes count:', initialBoxes.length);
+      console.log('PackagingGrid processed boxes:', initialBoxes);
       setBoxes(initialBoxes);
     } else {
+      console.log('PackagingGrid: No algorithm data received');
       setBoxes([]);
     }
   }, [config, algorithmData]);
@@ -103,30 +116,47 @@ export const PackagingGrid: React.FC<PackagingGridProps> = ({ config, algorithmD
                 height={box.height}
                 fill="hsl(var(--primary) / 0.7)"
                 stroke="hsl(var(--primary))"
-                strokeWidth="2"
+                strokeWidth={boxes.length > 20 ? "1" : "2"}
                 rx="4"
-                className="transition-all duration-300"
+                className="transition-all duration-300 hover:fill-primary/90"
               />
-              <text
-                x={box.x + box.width / 2}
-                y={transformY(box.y + box.height / 2, gridDimensions.height)}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fill="hsl(var(--primary-foreground))"
-                fontSize="12"
-                fontWeight="bold"
-              >
-                {box.index}
-              </text>
-              {/* Show coordinates for debugging */}
-              <text
-                x={box.x + 2}
-                y={transformY(box.y, gridDimensions.height) - 2}
-                fill="hsl(var(--muted-foreground))"
-                fontSize="10"
-              >
-                ({box.x},{box.y})
-              </text>
+              {/* Only show index text if there are fewer than 30 boxes */}
+              {boxes.length <= 30 && (
+                <text
+                  x={box.x + box.width / 2}
+                  y={transformY(box.y + box.height / 2, gridDimensions.height)}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fill="hsl(var(--primary-foreground))"
+                  fontSize={boxes.length > 15 ? "10" : "12"}
+                  fontWeight="bold"
+                >
+                  {box.index}
+                </text>
+              )}
+              {/* Only show coordinates for debugging if there are fewer than 10 boxes */}
+              {boxes.length <= 10 && (
+                <>
+                  <text
+                    x={box.x + 2}
+                    y={transformY(box.y, gridDimensions.height) - 2}
+                    fill="hsl(var(--muted-foreground))"
+                    fontSize="10"
+                  >
+                    ({box.x},{box.y})
+                  </text>
+                  {/* Show box dimensions */}
+                  <text
+                    x={box.x + box.width / 2}
+                    y={transformY(box.y + box.height, gridDimensions.height) + 15}
+                    textAnchor="middle"
+                    fill="hsl(var(--muted-foreground))"
+                    fontSize="10"
+                  >
+                    {box.width}×{box.height}
+                  </text>
+                </>
+              )}
             </g>
           ))}
           
@@ -145,6 +175,24 @@ export const PackagingGrid: React.FC<PackagingGridProps> = ({ config, algorithmD
         <p>• Boxes placed: {boxes.length}</p>
         <p>• Max box size: {config.maximumSideLength} units</p>
         <p>• Clearance: {config.clearance} units</p>
+        {boxes.length > 0 && (
+          <>
+            <p>• Total area used: {boxes.reduce((sum, box) => sum + (box.width * box.height), 0)} units²</p>
+            <p>• Container area: {gridDimensions.width * gridDimensions.height} units²</p>
+            <p>• Utilization: {((boxes.reduce((sum, box) => sum + (box.width * box.height), 0) / (gridDimensions.width * gridDimensions.height)) * 100).toFixed(1)}%</p>
+            {boxes.length > 10 && (
+              <>
+                <p>• Box size range: {Math.min(...boxes.map(b => Math.min(b.width, b.height)))} - {Math.max(...boxes.map(b => Math.max(b.width, b.height)))} units</p>
+                <p>• Average box size: {Math.round(boxes.reduce((sum, box) => sum + (box.width + box.height) / 2, 0) / boxes.length)} units</p>
+                <p>• Boxes with id 0-9: {boxes.filter(b => b.index < 10).length}</p>
+                <p>• Boxes with id 10-19: {boxes.filter(b => b.index >= 10 && b.index < 20).length}</p>
+                <p>• Boxes with id 20-29: {boxes.filter(b => b.index >= 20 && b.index < 30).length}</p>
+                <p>• Boxes with id 30-39: {boxes.filter(b => b.index >= 30 && b.index < 40).length}</p>
+                <p>• Boxes with id 40-49: {boxes.filter(b => b.index >= 40 && b.index < 50).length}</p>
+              </>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

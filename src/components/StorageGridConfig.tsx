@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Settings, Save, Play, Package, FileText, Shuffle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { fetchPackagingData, fetchRetrievalData, saveConfiguration } from '@/services/api';
+import { fetchPackagingData, fetchRetrievalData, saveConfiguration, sendPackConfiguration } from '@/services/api';
 import { StorageConfig, AlgorithmData, DataMode } from '@/types/warehouse';
 import { useFileHandling } from '@/hooks/useFileHandling';
 import { generateRandomWarehouseData, createDataFiles } from '@/services/dataGeneration';
@@ -34,6 +34,7 @@ export const StorageGridConfig: React.FC<StorageGridConfigProps> = ({
     clearance: 20
   });
   const [dataMode, setDataMode] = useState<DataMode | '' | 'expanded'>('');
+  const [isSaving, setIsSaving] = useState(false);
 
   const {
     packagingFile,
@@ -79,6 +80,7 @@ export const StorageGridConfig: React.FC<StorageGridConfigProps> = ({
   };
 
   const handleSaveConfiguration = async () => {
+    setIsSaving(true);
     try {
       // If no packaging file uploaded, fetch from server
       if (!packagingFile) {
@@ -95,11 +97,52 @@ export const StorageGridConfig: React.FC<StorageGridConfigProps> = ({
       };
       
       await saveConfiguration(configToSave);
+      
+      // Send configuration to pack endpoint with required format
+      const packConfig = {
+        storage_width: config.storageWidth,
+        storage_length: config.storageLength,
+        num_rects: config.numberOfRectangles,
+        min_side: config.minimumSideLength,
+        max_side: config.maximumSideLength,
+        clearance: config.clearance
+      };
+      
+      const packResponse = await sendPackConfiguration(packConfig);
+      
+      console.log('Full pack response:', packResponse);
+      
+      // Handle the new response format - direct array of boxes
+      if (packResponse && Array.isArray(packResponse)) {
+        console.log('Pack response boxes count:', packResponse.length);
+        console.log('Pack response boxes:', packResponse);
+        
+        // Transform the new format to match our expected AlgorithmData format
+        const transformedBoxes = packResponse.map(box => ({
+          index: box.id,
+          x: box.x,
+          y: box.y,
+          width: box.width,
+          height: box.height,
+          packed: true, // All boxes in response are packed
+          retrieval_order: null, // Not provided in new format
+          path: box.retrieval_path || null
+        }));
+        
+        onPackagingData?.(transformedBoxes);
+        
+        // For retrieval data, we can use the same transformed data
+        // since retrieval_path is included in each box
+        onRetrievalData?.(transformedBoxes);
+      } else {
+        console.log('No valid boxes found in pack response');
+      }
+      
       onConfigSave(config);
       
       toast({
         title: "Configuration Saved",
-        description: "Storage grid configuration has been updated and sent to server."
+        description: `Storage grid configuration has been updated and sent to server. ${Array.isArray(packResponse) ? packResponse.length : 0} boxes processed with new format.`
       });
     } catch (error) {
       toast({
@@ -107,6 +150,8 @@ export const StorageGridConfig: React.FC<StorageGridConfigProps> = ({
         description: "Failed to save configuration to server.",
         variant: "destructive"
       });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -308,9 +353,22 @@ export const StorageGridConfig: React.FC<StorageGridConfigProps> = ({
             onClick={handleSaveConfiguration}
             className="w-full"
             size="lg"
+            disabled={isSaving}
           >
-            <Save className="w-4 h-4 mr-2" />
-            Save Configuration
+            {isSaving ? (
+              <>
+                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span className="ml-2">Saving...</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                Save Configuration
+              </>
+            )}
           </Button>
 
           <div className="text-sm text-muted-foreground space-y-1">

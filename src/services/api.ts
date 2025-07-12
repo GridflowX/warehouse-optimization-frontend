@@ -119,9 +119,70 @@ export class ApiService {
       throw error;
     }
   }
+
+  // Send packing configuration to server
+  static async sendPackConfiguration(config: {
+    storage_width: number;
+    storage_length: number;
+    num_rects: number;
+    min_side: number;
+    max_side: number;
+    clearance: number;
+  }): Promise<any> {
+    if (USE_MOCK_DATA) {
+      // Mock pack response with 50 boxes in new format
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Generate 50 boxes with random positions and sizes
+      const boxes = [];
+      
+      for (let i = 0; i < 50; i++) {
+        const width = Math.floor(Math.random() * (config.max_side - config.min_side)) + config.min_side;
+        const height = Math.floor(Math.random() * (config.max_side - config.min_side)) + config.min_side;
+        const x = Math.floor(Math.random() * (config.storage_width - width - config.clearance));
+        const y = Math.floor(Math.random() * (config.storage_length - height - config.clearance));
+        
+        const box = {
+          id: i,
+          x: x,
+          y: y,
+          width: width,
+          height: height,
+          exit_edge: null,
+          path_length: null,
+          retrieval_path: null
+        };
+        
+        boxes.push(box);
+      }
+      
+      return boxes; // Return direct array instead of object with boxes property
+    }
+    
+    try {
+      // Use the external API URL for the pack endpoint
+      const response = await fetch('https://infra-optimization.onrender.com/pack', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(config),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      console.error('Error sending pack configuration:', error);
+      throw error;
+    }
+  }
 }
 
 // Export convenience functions
 export const fetchPackagingData = ApiService.fetchPackagingData.bind(ApiService);
 export const fetchRetrievalData = ApiService.fetchRetrievalData.bind(ApiService);
 export const saveConfiguration = ApiService.saveConfiguration.bind(ApiService);
+export const sendPackConfiguration = ApiService.sendPackConfiguration.bind(ApiService);
