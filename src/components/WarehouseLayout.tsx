@@ -47,7 +47,8 @@ export const WarehouseLayout: React.FC<WarehouseLayoutProps> = ({
           
           {/* Animated Retrieval Grid */}
           <AnimatedStorageGrid 
-            algorithmData={retrievalData}
+            packagingData={packagingData}
+            retrievalData={retrievalData}
             onAnimationComplete={() => console.log('Animation complete!')}
           />
         </div>

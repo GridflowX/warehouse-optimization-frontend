@@ -19,7 +19,13 @@ export const PackagingGrid: React.FC<PackagingGridProps> = ({ config, algorithmD
     // Initialize boxes from algorithm data
     if (algorithmData) {
       const initialBoxes = algorithmData
-        .filter((boxData) => boxData.packed) // Only show packed boxes
+        .filter((boxData) => {
+          // Only show packed boxes with valid coordinates
+          return boxData.packed && 
+                 boxData.x !== null && boxData.x !== undefined &&
+                 boxData.y !== null && boxData.y !== undefined &&
+                 !isNaN(boxData.x) && !isNaN(boxData.y);
+        })
         .map((boxData) => ({
           id: `box-${boxData.index}`,
           x: boxData.x,

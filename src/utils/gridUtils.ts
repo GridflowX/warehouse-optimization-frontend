@@ -20,11 +20,20 @@ export const calculateGridDimensions = (
   let height = storageLength;
 
   if (boxes.length > 0) {
-    const maxX = Math.max(width, ...boxes.map(box => box.x + box.width)) + padding;
-    const maxY = Math.max(height, ...boxes.map(box => box.y + box.height)) + padding;
+    // Filter out boxes with null/undefined coordinates (unpacked boxes)
+    const validBoxes = boxes.filter(box => 
+      box.x !== null && box.x !== undefined && 
+      box.y !== null && box.y !== undefined &&
+      !isNaN(box.x) && !isNaN(box.y)
+    );
     
-    width = maxX;
-    height = maxY;
+    if (validBoxes.length > 0) {
+      const maxX = Math.max(width, ...validBoxes.map(box => box.x + box.width)) + padding;
+      const maxY = Math.max(height, ...validBoxes.map(box => box.y + box.height)) + padding;
+      
+      width = maxX;
+      height = maxY;
+    }
   }
 
   return { width, height };
@@ -38,14 +47,24 @@ export const calculateViewBox = (
   gridDimensions: GridDimensions,
   padding: number = 50
 ): string => {
-  if (boxes.length === 0) {
+  // Filter out boxes with null/undefined coordinates (unpacked boxes)
+  const validBoxes = boxes.filter(box => 
+    box.x !== null && box.x !== undefined && 
+    box.y !== null && box.y !== undefined &&
+    !isNaN(box.x) && !isNaN(box.y) &&
+    box.width !== null && box.width !== undefined &&
+    box.height !== null && box.height !== undefined &&
+    !isNaN(box.width) && !isNaN(box.height)
+  );
+  
+  if (validBoxes.length === 0) {
     return `0 0 ${gridDimensions.width} ${gridDimensions.height}`;
   }
   
-  const minX = Math.min(0, ...boxes.map(box => box.x)) - padding;
-  const minY = Math.min(0, ...boxes.map(box => box.y)) - padding;
-  const maxX = Math.max(gridDimensions.width, ...boxes.map(box => box.x + box.width)) + padding;
-  const maxY = Math.max(gridDimensions.height, ...boxes.map(box => box.y + box.height)) + padding;
+  const minX = Math.min(0, ...validBoxes.map(box => box.x)) - padding;
+  const minY = Math.min(0, ...validBoxes.map(box => box.y)) - padding;
+  const maxX = Math.max(gridDimensions.width, ...validBoxes.map(box => box.x + box.width)) + padding;
+  const maxY = Math.max(gridDimensions.height, ...validBoxes.map(box => box.y + box.height)) + padding;
   
   return `${minX} ${minY} ${maxX - minX} ${maxY - minY}`;
 };

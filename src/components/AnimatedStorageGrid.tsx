@@ -5,12 +5,14 @@ import { Play, Pause, RotateCcw, Package } from 'lucide-react';
 import { transformY, calculateGridDimensions } from '@/utils/gridUtils';
 
 interface AnimatedStorageGridProps {
-  algorithmData: AlgorithmData | null;
+  packagingData: AlgorithmData | null;  // For initial box positions
+  retrievalData: AlgorithmData | null;  // For retrieval animation
   onAnimationComplete?: () => void;
 }
 
 export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
-  algorithmData,
+  packagingData,
+  retrievalData,
   onAnimationComplete
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -22,23 +24,19 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
 
   // Initialize boxes when algorithm data changes
   useEffect(() => {
-    if (algorithmData) {
-      // Calculate grid dimensions from the algorithm data
-      const dimensions = calculateGridDimensions(1000, 2000, algorithmData, 100);
-      
-      algorithmData.forEach(box => {
-        if (box.path) {
-          box.path.forEach(step => {
-            if (step.x > 0) dimensions.width = Math.max(dimensions.width, step.x + 100);
-            if (step.y > 0) dimensions.height = Math.max(dimensions.height, step.y + 100);
-          });
-        }
-      });
-      
+    if (packagingData) {
+      // Calculate grid dimensions from the packaging data
+      const dimensions = calculateGridDimensions(1000, 2000, packagingData, 100);
       setGridDimensions(dimensions);
 
-      const boxes: AnimatedBox[] = algorithmData
-        .filter((box) => box.packed) // Only show packed boxes
+      const boxes: AnimatedBox[] = packagingData
+        .filter((box) => {
+          // Only show packed boxes with valid coordinates
+          return box.packed && 
+                 box.x !== null && box.x !== undefined &&
+                 box.y !== null && box.y !== undefined &&
+                 !isNaN(box.x) && !isNaN(box.y);
+        })
         .map((box) => ({
           id: `box-${box.index}`,
           x: box.x,
@@ -58,12 +56,12 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
       setAnimatedBoxes(boxes);
       setCurrentStep(0);
     }
-  }, [algorithmData]);
+  }, [packagingData]);
 
   // Animation logic for retrieval mode - moving boxes out of grid
   useEffect(() => {
-    if (!isPlaying || !algorithmData || !isRetrievalMode || currentStep >= algorithmData.length) {
-      if (currentStep >= (algorithmData?.length || 0)) {
+    if (!isPlaying || !retrievalData || !isRetrievalMode || currentStep >= retrievalData.length) {
+      if (currentStep >= (retrievalData?.length || 0)) {
         setIsPlaying(false);
         onAnimationComplete?.();
       }
@@ -71,7 +69,7 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
     }
 
     const timer = setTimeout(() => {
-      const boxToRetrieve = algorithmData.find(box => box.retrieval_order === currentStep);
+      const boxToRetrieve = retrievalData.find(box => box.retrieval_order === currentStep);
       if (boxToRetrieve) {
         animateBoxRetrieval(boxToRetrieve);
       }
@@ -79,7 +77,7 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
     }, animationSpeed);
 
     return () => clearTimeout(timer);
-  }, [isPlaying, currentStep, algorithmData, animationSpeed, isRetrievalMode]);
+  }, [isPlaying, currentStep, retrievalData, animationSpeed, isRetrievalMode]);
 
   const animateBoxRetrieval = (box: AlgorithmBox) => {
     if (!box.path || box.path.length === 0) {
@@ -153,9 +151,15 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
     setIsPlaying(false);
     setCurrentStep(0);
     setIsRetrievalMode(false);
-    if (algorithmData) {
-      const resetBoxes: AnimatedBox[] = algorithmData
-        .filter((box) => box.packed)
+    if (packagingData) {
+      const resetBoxes: AnimatedBox[] = packagingData
+        .filter((box) => {
+          // Only show packed boxes with valid coordinates
+          return box.packed && 
+                 box.x !== null && box.x !== undefined &&
+                 box.y !== null && box.y !== undefined &&
+                 !isNaN(box.x) && !isNaN(box.y);
+        })
         .map((box) => ({
           id: `box-${box.index}`,
           x: box.x,
@@ -189,7 +193,7 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
         <div className="flex items-center gap-2">
           <Button
             onClick={handlePlay}
-            disabled={isPlaying || !algorithmData}
+            disabled={isPlaying || !retrievalData}
             size="sm"
             variant="outline"
           >
@@ -214,7 +218,7 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
         
         <div className="flex items-center gap-4">
           <span className="text-sm text-muted-foreground">
-            Step: {currentStep} / {algorithmData?.length || 0}
+            Step: {currentStep} / {retrievalData?.length || 0}
           </span>
           <span className="text-sm text-muted-foreground">
             Remaining: {animatedBoxes.filter(box => box.isVisible).length}
@@ -294,7 +298,7 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
       </div>
 
       {/* Status */}
-      {!algorithmData && (
+      {!packagingData && (
         <div className="text-center py-8 text-muted-foreground">
           <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
           <p>Upload algorithm data to see the animated packaging visualization</p>
