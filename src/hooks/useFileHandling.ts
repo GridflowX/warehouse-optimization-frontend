@@ -61,7 +61,9 @@ export const useFileHandling = (onAlgorithmData?: (data: AlgorithmData) => void)
           description: `Successfully loaded ${data.length} boxes.`
         });
       } else {
-        throw new Error('Invalid packaging data format');
+        console.error('Packaging validation failed. Expected format: { index: number, width: number, height: number, x: number, y: number, packed: boolean }[]');
+        console.error('Received data:', data);
+        throw new Error('Invalid packaging data format. Expected array of boxes with index, width, height, x, y, and packed properties.');
       }
     } catch (error) {
       console.error('Packaging file parsing error:', error);
