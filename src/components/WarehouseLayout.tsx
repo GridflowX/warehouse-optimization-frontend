@@ -1,19 +1,22 @@
 import React from 'react';
 import { StorageGridConfig, StorageConfig, AlgorithmData } from '@/components/StorageGridConfig';
 import { AnimatedStorageGrid } from '@/components/AnimatedStorageGrid';
+import { PackagingGrid } from '@/components/PackagingGrid';
 
 interface WarehouseLayoutProps {
   algorithmData: AlgorithmData | null;
   onConfigSave: (config: StorageConfig) => void;
   onAnimateRetrieval: () => void;
   onAlgorithmData: (data: AlgorithmData) => void;
+  currentConfig: StorageConfig | null;
 }
 
 export const WarehouseLayout: React.FC<WarehouseLayoutProps> = ({
   algorithmData,
   onConfigSave,
   onAnimateRetrieval,
-  onAlgorithmData
+  onAlgorithmData,
+  currentConfig
 }) => {
   return (
     <div className="flex flex-col lg:flex-row gap-8">
@@ -27,7 +30,17 @@ export const WarehouseLayout: React.FC<WarehouseLayoutProps> = ({
             </p>
           </div>
 
-          {/* Animated Storage Grid */}
+          {/* Packaging Grid - Show placed boxes */}
+          {currentConfig && (
+            <div className="mb-6">
+              <PackagingGrid 
+                config={currentConfig}
+                algorithmData={algorithmData}
+              />
+            </div>
+          )}
+          
+          {/* Animated Retrieval Grid */}
           <AnimatedStorageGrid 
             algorithmData={algorithmData}
             onAnimationComplete={() => console.log('Animation complete!')}

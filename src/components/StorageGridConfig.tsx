@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Settings, Upload, Save, Play, Package, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { fetchPackagingData, fetchRetrievalData, saveConfiguration } from '@/services/api';
 
 // Types for the algorithm data
 export interface AlgorithmStep {
@@ -148,20 +149,62 @@ export const StorageGridConfig: React.FC<StorageGridConfigProps> = ({
     }
   };
 
-  const handleSaveConfiguration = () => {
-    onConfigSave(config);
-    toast({
-      title: "Configuration Saved",
-      description: "Storage grid configuration has been updated successfully."
-    });
+  const handleSaveConfiguration = async () => {
+    try {
+      // If no packaging file uploaded, fetch from server
+      if (!packagingFile) {
+        const packagingData = await fetchPackagingData();
+        // Process packaging data and set up grid
+        console.log('Fetched packaging data:', packagingData);
+      }
+
+      // Send configuration to server
+      const configToSave = {
+        ...config,
+        packagingFile: packagingFile?.name,
+        retrievalFile: retrievalFile?.name
+      };
+      
+      await saveConfiguration(configToSave);
+      onConfigSave(config);
+      
+      toast({
+        title: "Configuration Saved",
+        description: "Storage grid configuration has been updated and sent to server."
+      });
+    } catch (error) {
+      toast({
+        title: "Save Failed",
+        description: "Failed to save configuration to server.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleAnimateRetrieval = () => {
-    onAnimateRetrieval();
-    toast({
-      title: "Animation Started",
-      description: "Retrieval path animation is now running."
-    });
+  const handleAnimateRetrieval = async () => {
+    try {
+      // If no retrieval file uploaded, fetch from server
+      if (!retrievalFile) {
+        const retrievalData = await fetchRetrievalData();
+        onAlgorithmData?.(retrievalData);
+        toast({
+          title: "Retrieval data loaded",
+          description: `Successfully loaded ${retrievalData.length} boxes for animation.`
+        });
+      }
+
+      onAnimateRetrieval();
+      toast({
+        title: "Animation Started",
+        description: "Retrieval path animation is now running."
+      });
+    } catch (error) {
+      toast({
+        title: "Animation Failed",
+        description: "Failed to load retrieval data from server.",
+        variant: "destructive"
+      });
+    }
   };
 
   const maxAllowed = Math.floor((config.storageWidth * config.storageLength) / 

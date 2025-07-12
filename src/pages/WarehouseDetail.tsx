@@ -88,6 +88,7 @@ const WarehouseDetail: React.FC = () => {
             onConfigSave={handleConfigSave}
             onAnimateRetrieval={handleAnimateRetrieval}
             onAlgorithmData={handleAlgorithmData}
+            currentConfig={currentConfig}
           />
 
           {/* Warehouse Statistics */}

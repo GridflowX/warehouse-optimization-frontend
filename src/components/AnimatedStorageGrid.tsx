@@ -9,12 +9,17 @@ interface AnimatedStorageGridProps {
 }
 
 interface AnimatedBox {
-  id: number;
+  id: string;
   x: number;
   y: number;
   isVisible: boolean;
   isAnimating: boolean;
-  finalPosition: { x: number; y: number };
+  finalX: number;
+  finalY: number;
+  width: number;
+  height: number;
+  isRemoving: boolean;
+  pathIndex: number;
 }
 
 export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
@@ -25,6 +30,7 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
   const [currentStep, setCurrentStep] = useState(0);
   const [animatedBoxes, setAnimatedBoxes] = useState<AnimatedBox[]>([]);
   const [animationSpeed, setAnimationSpeed] = useState(500); // milliseconds per step
+  const [isRetrievalMode, setIsRetrievalMode] = useState(false);
 
   // Initialize boxes when algorithm data changes
   useEffect(() => {
@@ -32,12 +38,17 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
       const boxes: AnimatedBox[] = algorithmData.map((box) => {
         const finalPos = box.path[box.path.length - 1] || { x: 0, y: 0 };
         return {
-          id: box.index,
-          x: 0,
-          y: 0,
-          isVisible: false,
+          id: `box-${box.index}`,
+          x: finalPos.x,
+          y: finalPos.y,
+          isVisible: true,
           isAnimating: false,
-          finalPosition: { x: finalPos.x, y: finalPos.y }
+          finalX: finalPos.x,
+          finalY: finalPos.y,
+          width: 40 + Math.random() * 20,
+          height: 40 + Math.random() * 20,
+          isRemoving: false,
+          pathIndex: 0,
         };
       });
       setAnimatedBoxes(boxes);
@@ -45,9 +56,9 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
     }
   }, [algorithmData]);
 
-  // Animation logic
+  // Animation logic for retrieval mode - moving boxes out of grid
   useEffect(() => {
-    if (!isPlaying || !algorithmData || currentStep >= algorithmData.length) {
+    if (!isPlaying || !algorithmData || !isRetrievalMode || currentStep >= algorithmData.length) {
       if (currentStep >= (algorithmData?.length || 0)) {
         setIsPlaying(false);
         onAnimationComplete?.();
@@ -56,82 +67,78 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
     }
 
     const timer = setTimeout(() => {
-      const currentBox = algorithmData[currentStep];
-      animateBox(currentBox);
-      setCurrentStep(prev => prev + 1);
+      const boxToRetrieve = algorithmData.find(box => box.retrieval_order === currentStep);
+      if (boxToRetrieve) {
+        animateBoxRetrieval(boxToRetrieve);
+        setCurrentStep(prev => prev + 1);
+      }
     }, animationSpeed);
 
     return () => clearTimeout(timer);
-  }, [isPlaying, currentStep, algorithmData, animationSpeed]);
+  }, [isPlaying, currentStep, algorithmData, animationSpeed, isRetrievalMode]);
 
-  const animateBox = (box: AlgorithmBox) => {
-    setAnimatedBoxes(prev => 
-      prev.map(animBox => 
-        animBox.id === box.index 
-          ? { 
-              ...animBox, 
-              isVisible: true, 
-              isAnimating: true,
-              x: box.path[0]?.x || 0,
-              y: box.path[0]?.y || 0
-            }
-          : animBox
-      )
-    );
-
-    // Animate through the path
-    if (box.path.length > 1) {
-      let pathIndex = 0;
-      const pathTimer = setInterval(() => {
-        pathIndex++;
-        if (pathIndex >= box.path.length) {
-          clearInterval(pathTimer);
-          // Mark animation complete and move to final position
-          setAnimatedBoxes(prev => 
-            prev.map(animBox => 
-              animBox.id === box.index 
-                ? { 
-                    ...animBox, 
-                    isAnimating: false,
-                    x: animBox.finalPosition.x,
-                    y: animBox.finalPosition.y
-                  }
-                : animBox
-            )
-          );
-          return;
+  const animateBoxRetrieval = (box: AlgorithmBox) => {
+    if (box.path.length === 0) {
+      // If no path, just remove the box
+      setAnimatedBoxes(prev => prev.map(animBox => {
+        if (animBox.id === `box-${box.index}`) {
+          return { ...animBox, isVisible: false };
         }
-
-        const step = box.path[pathIndex];
-        setAnimatedBoxes(prev => 
-          prev.map(animBox => 
-            animBox.id === box.index 
-              ? { ...animBox, x: step.x, y: step.y }
-              : animBox
-          )
-        );
-      }, 100); // Path step speed
-    } else {
-      // If no path, just place at final position
-      setTimeout(() => {
-        setAnimatedBoxes(prev => 
-          prev.map(animBox => 
-            animBox.id === box.index 
-              ? { 
-                  ...animBox, 
-                  isAnimating: false,
-                  x: animBox.finalPosition.x,
-                  y: animBox.finalPosition.y
-                }
-              : animBox
-          )
-        );
-      }, 200);
+        return animBox;
+      }));
+      return;
     }
+
+    setAnimatedBoxes(prev => prev.map(animBox => {
+      if (animBox.id === `box-${box.index}`) {
+        return {
+          ...animBox,
+          isRemoving: true,
+          isAnimating: true,
+        };
+      }
+      return animBox;
+    }));
+
+    // Animate through the retrieval path
+    let pathIndex = 0;
+    const pathInterval = setInterval(() => {
+      if (pathIndex < box.path.length) {
+        const step = box.path[pathIndex];
+        setAnimatedBoxes(prev => prev.map(animBox => {
+          if (animBox.id === `box-${box.index}`) {
+            return {
+              ...animBox,
+              x: step.x,
+              y: step.y,
+              pathIndex: pathIndex,
+            };
+          }
+          return animBox;
+        }));
+        pathIndex++;
+      } else {
+        // Box has completed its path, remove it from grid
+        clearInterval(pathInterval);
+        setAnimatedBoxes(prev => prev.map(animBox => {
+          if (animBox.id === `box-${box.index}`) {
+            return {
+              ...animBox,
+              isVisible: false,
+              isAnimating: false,
+            };
+          }
+          return animBox;
+        }));
+      }
+    }, 150);
   };
 
   const handlePlay = () => {
     setIsPlaying(true);
+    if (!isRetrievalMode) {
+      setIsRetrievalMode(true);
+    }
   };
 
   const handlePause = () => {
@@ -141,16 +148,22 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
   const handleReset = () => {
     setIsPlaying(false);
     setCurrentStep(0);
+    setIsRetrievalMode(false);
     if (algorithmData) {
       const resetBoxes: AnimatedBox[] = algorithmData.map((box) => {
         const finalPos = box.path[box.path.length - 1] || { x: 0, y: 0 };
         return {
-          id: box.index,
-          x: 0,
-          y: 0,
-          isVisible: false,
+          id: `box-${box.index}`,
+          x: finalPos.x,
+          y: finalPos.y,
+          isVisible: true,
           isAnimating: false,
-          finalPosition: { x: finalPos.x, y: finalPos.y }
+          finalX: finalPos.x,
+          finalY: finalPos.y,
+          width: 40 + Math.random() * 20,
+          height: 40 + Math.random() * 20,
+          isRemoving: false,
+          pathIndex: 0,
         };
       });
       setAnimatedBoxes(resetBoxes);
@@ -216,7 +229,10 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
             Step: {currentStep} / {algorithmData?.length || 0}
           </span>
           <span className="text-sm text-muted-foreground">
-            Boxes: {animatedBoxes.filter(box => box.isVisible).length}
+            Remaining: {animatedBoxes.filter(box => box.isVisible).length}
+          </span>
+          <span className="text-sm text-muted-foreground">
+            Mode: {isRetrievalMode ? 'Retrieval' : 'Placement'}
           </span>
         </div>
       </div>
@@ -239,52 +255,31 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
           <rect width="100%" height="100%" fill="url(#grid)" />
           
           {/* Animated boxes */}
-          {animatedBoxes.map((box) => (
-            box.isVisible && (
-              <g key={box.id}>
-                {/* Box path trail (if animating) */}
-                {box.isAnimating && algorithmData && (
-                  (() => {
-                    const currentBoxData = algorithmData.find(b => b.index === box.id);
-                    return currentBoxData?.path.map((step, index) => (
-                      <circle
-                        key={`trail-${index}`}
-                        cx={step.x}
-                        cy={step.y}
-                        r="2"
-                        fill="hsl(var(--primary))"
-                        opacity={0.3}
-                      />
-                    ));
-                  })()
-                )}
-                
-                {/* Main box */}
-                <g transform={`translate(${box.x}, ${box.y})`}>
-                  <rect
-                    x="-15"
-                    y="-15"
-                    width="30"
-                    height="30"
-                    fill={box.isAnimating ? "hsl(var(--primary))" : "hsl(var(--accent))"}
-                    stroke="hsl(var(--border))"
-                    strokeWidth="1"
-                    rx="3"
-                    className={box.isAnimating ? "animate-pulse" : ""}
-                  />
-                  <text
-                    x="0"
-                    y="5"
-                    textAnchor="middle"
-                    fontSize="10"
-                    fill="hsl(var(--primary-foreground))"
-                    fontWeight="bold"
-                  >
-                    {box.id}
-                  </text>
-                </g>
-              </g>
-            )
+          {animatedBoxes.filter(box => box.isVisible).map((box) => (
+            <g key={box.id}>
+              <rect
+                x={box.x - box.width/2}
+                y={box.y - box.height/2}
+                width={box.width}
+                height={box.height}
+                fill={box.isRemoving ? "hsl(var(--destructive) / 0.8)" : "hsl(var(--primary) / 0.8)"}
+                stroke={box.isRemoving ? "hsl(var(--destructive))" : "hsl(var(--primary))"}
+                strokeWidth="2"
+                rx="4"
+                className={`transition-all duration-300 ${box.isAnimating ? 'animate-pulse' : ''}`}
+              />
+              <text
+                x={box.x}
+                y={box.y + 3}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fill="hsl(var(--primary-foreground))"
+                fontSize="12"
+                fontWeight="bold"
+              >
+                {box.id.split('-')[1]}
+              </text>
+            </g>
           ))}
         </svg>
       </div>

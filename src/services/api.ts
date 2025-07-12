@@ -68,4 +68,60 @@ export class ApiService {
       };
     }
   }
+
+  // Fetch packaging data from server
+  static async fetchPackagingData(): Promise<any> {
+    if (USE_MOCK_DATA) {
+      // Return mock packaging data
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return [];
+    }
+    
+    try {
+      return this.request<any>('/api/packaging.json');
+    } catch (error) {
+      console.error('Error fetching packaging data:', error);
+      throw error;
+    }
+  }
+
+  // Fetch retrieval data from server
+  static async fetchRetrievalData(): Promise<any> {
+    if (USE_MOCK_DATA) {
+      // Return mock retrieval data
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return [];
+    }
+    
+    try {
+      return this.request<any>('/api/retrieval.json');
+    } catch (error) {
+      console.error('Error fetching retrieval data:', error);
+      throw error;
+    }
+  }
+
+  // Send configuration to server
+  static async saveConfiguration(config: any): Promise<any> {
+    if (USE_MOCK_DATA) {
+      // Mock save response
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return { success: true, message: 'Configuration saved successfully' };
+    }
+    
+    try {
+      return this.request<any>('/api/configuration', {
+        method: 'POST',
+        body: JSON.stringify(config),
+      });
+    } catch (error) {
+      console.error('Error saving configuration:', error);
+      throw error;
+    }
+  }
 }
+
+// Export convenience functions
+export const fetchPackagingData = ApiService.fetchPackagingData.bind(ApiService);
+export const fetchRetrievalData = ApiService.fetchRetrievalData.bind(ApiService);
+export const saveConfiguration = ApiService.saveConfiguration.bind(ApiService);
