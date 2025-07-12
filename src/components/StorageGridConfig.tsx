@@ -173,36 +173,113 @@ export const StorageGridConfig: React.FC<StorageGridConfigProps> = ({
   const generateRandomData = () => {
     const packagingData: AlgorithmData = [];
     const retrievalData: AlgorithmData = [];
+    const placedBoxes: { x: number; y: number; width: number; height: number }[] = [];
     
-    for (let i = 0; i < config.numberOfRectangles; i++) {
+    // Helper function to check if two rectangles overlap with clearance
+    const hasOverlap = (box1: any, box2: any, clearance: number) => {
+      return !(
+        box1.x + box1.width + clearance <= box2.x ||
+        box2.x + box2.width + clearance <= box1.x ||
+        box1.y + box1.height + clearance <= box2.y ||
+        box2.y + box2.height + clearance <= box1.y
+      );
+    };
+    
+    // Helper function to find a valid position for a box
+    const findValidPosition = (width: number, height: number, maxAttempts = 100) => {
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        const x = Math.floor(Math.random() * Math.max(1, config.storageWidth - width - config.clearance));
+        const y = Math.floor(Math.random() * Math.max(1, config.storageLength - height - config.clearance));
+        
+        const newBox = { x, y, width, height };
+        
+        // Check if this position overlaps with any existing box (including clearance)
+        const hasCollision = placedBoxes.some(placedBox => 
+          hasOverlap(newBox, placedBox, config.clearance)
+        );
+        
+        if (!hasCollision) {
+          return { x, y };
+        }
+      }
+      return null; // Could not find valid position
+    };
+    
+    console.log(`Generating random data with ${config.clearance}mm clearance...`);
+    
+    let packedCount = 0;
+    for (let i = 0; i < config.numberOfRectangles && packedCount < config.numberOfRectangles; i++) {
       const width = Math.floor(Math.random() * (config.maximumSideLength - config.minimumSideLength + 1)) + config.minimumSideLength;
       const height = Math.floor(Math.random() * (config.maximumSideLength - config.minimumSideLength + 1)) + config.minimumSideLength;
       
-      // Random placement within storage bounds
-      const x = Math.floor(Math.random() * (config.storageWidth - width));
-      const y = Math.floor(Math.random() * (config.storageLength - height));
+      const position = findValidPosition(width, height);
       
-      const box: AlgorithmBox = {
-        index: i,
-        width,
-        height,
-        x,
-        y,
-        packed: Math.random() > 0.1, // 90% chance of being packed
-        retrieval_order: i + 1,
-        path: [
-          { step: 0, x, y },
-          { step: 1, x: x + width / 2, y: y + height / 2 },
-          { step: 2, x: config.storageWidth + 50, y: config.storageLength + 50 }
-        ]
-      };
-      
-      packagingData.push(box);
-      
-      if (box.packed) {
+      if (position) {
+        const { x, y } = position;
+        
+        // Generate shortest path to nearest edge
+        const distanceToLeft = x;
+        const distanceToRight = config.storageWidth - (x + width);
+        const distanceToBottom = y;
+        const distanceToTop = config.storageLength - (y + height);
+        
+        const minDistance = Math.min(distanceToLeft, distanceToRight, distanceToBottom, distanceToTop);
+        
+        let exitX, exitY;
+        if (minDistance === distanceToLeft) {
+          exitX = -50; // Exit left
+          exitY = y + height / 2;
+        } else if (minDistance === distanceToRight) {
+          exitX = config.storageWidth + 50; // Exit right
+          exitY = y + height / 2;
+        } else if (minDistance === distanceToBottom) {
+          exitX = x + width / 2;
+          exitY = -50; // Exit bottom
+        } else {
+          exitX = x + width / 2;
+          exitY = config.storageLength + 50; // Exit top
+        }
+        
+        const box: AlgorithmBox = {
+          index: i,
+          width,
+          height,
+          x,
+          y,
+          packed: true,
+          retrieval_order: packedCount + 1,
+          path: [
+            { step: 0, x, y },
+            { step: 1, x: x + width / 2, y: y + height / 2 },
+            { step: 2, x: exitX, y: exitY }
+          ]
+        };
+        
+        packagingData.push(box);
         retrievalData.push(box);
+        placedBoxes.push({ x, y, width, height });
+        packedCount++;
+        
+        console.log(`Placed box ${i}: ${width}x${height} at (${x},${y})`);
+      } else {
+        // Could not place box - mark as unpacked
+        const box: AlgorithmBox = {
+          index: i,
+          width,
+          height,
+          x: 0,
+          y: 0,
+          packed: false,
+          retrieval_order: 0,
+          path: []
+        };
+        
+        packagingData.push(box);
+        console.log(`Could not place box ${i}: ${width}x${height} - marked as unpacked`);
       }
     }
+    
+    console.log(`Successfully placed ${packedCount} out of ${config.numberOfRectangles} boxes`);
     
     // Create blob files
     const packagingBlob = new Blob([JSON.stringify(packagingData, null, 2)], { type: 'application/json' });
@@ -219,7 +296,7 @@ export const StorageGridConfig: React.FC<StorageGridConfigProps> = ({
     
     toast({
       title: "Random data generated",
-      description: `Generated ${packagingData.length} random boxes with placement data.`
+      description: `Generated ${packagingData.length} boxes, ${packedCount} successfully placed with ${config.clearance}mm clearance.`
     });
   };
 
