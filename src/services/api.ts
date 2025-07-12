@@ -44,7 +44,7 @@ export class ApiService {
 
   static async optimizeParameters(params: OptimizationRequest): Promise<OptimizationResponse> {
     try {
-      await this.request<any>('/inputs', {
+      await this.request<any>('/input', {
         method: 'POST',
         body: JSON.stringify({ alpha: params.alpha, beta: params.beta }),
       });
