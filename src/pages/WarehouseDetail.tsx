@@ -11,7 +11,8 @@ const WarehouseDetail: React.FC = () => {
   const { warehouseId } = useParams<{ warehouseId: string }>();
   const [currentConfig, setCurrentConfig] = useState<StorageConfig | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [algorithmData, setAlgorithmData] = useState<AlgorithmData | null>(null);
+  const [packagingData, setPackagingData] = useState<AlgorithmData | null>(null);
+  const [retrievalData, setRetrievalData] = useState<AlgorithmData | null>(null);
 
   const handleConfigSave = (config: StorageConfig) => {
     setCurrentConfig(config);
@@ -30,8 +31,12 @@ const WarehouseDetail: React.FC = () => {
     }, 3000);
   };
 
-  const handleAlgorithmData = (data: AlgorithmData) => {
-    setAlgorithmData(data);
+  const handlePackagingData = (data: AlgorithmData) => {
+    setPackagingData(data);
+  };
+
+  const handleRetrievalData = (data: AlgorithmData) => {
+    setRetrievalData(data);
   };
 
   // Generate grid positions for storage bins
@@ -84,10 +89,12 @@ const WarehouseDetail: React.FC = () => {
 
           {/* Main Content - Grid and Configuration side by side */}
           <WarehouseLayout
-            algorithmData={algorithmData}
+            packagingData={packagingData}
+            retrievalData={retrievalData}
             onConfigSave={handleConfigSave}
             onAnimateRetrieval={handleAnimateRetrieval}
-            onAlgorithmData={handleAlgorithmData}
+            onPackagingData={handlePackagingData}
+            onRetrievalData={handleRetrievalData}
             currentConfig={currentConfig}
           />
 

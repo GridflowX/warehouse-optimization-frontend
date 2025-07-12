@@ -14,13 +14,15 @@ import { generateRandomWarehouseData, createDataFiles } from '@/services/dataGen
 interface StorageGridConfigProps {
   onConfigSave: (config: StorageConfig) => void;
   onAnimateRetrieval: () => void;
-  onAlgorithmData?: (data: AlgorithmData) => void;
+  onPackagingData?: (data: AlgorithmData) => void;
+  onRetrievalData?: (data: AlgorithmData) => void;
 }
 
 export const StorageGridConfig: React.FC<StorageGridConfigProps> = ({
   onConfigSave,
   onAnimateRetrieval,
-  onAlgorithmData
+  onPackagingData,
+  onRetrievalData
 }) => {
   const { toast } = useToast();
   const [config, setConfig] = useState<StorageConfig>({
@@ -40,7 +42,7 @@ export const StorageGridConfig: React.FC<StorageGridConfigProps> = ({
     setRetrievalFile,
     handlePackagingFileChange,
     handleRetrievalFileChange
-  } = useFileHandling(onAlgorithmData);
+  } = useFileHandling(onPackagingData, onRetrievalData);
 
   const handleInputChange = (field: keyof StorageConfig, value: number) => {
     setConfig(prev => ({ ...prev, [field]: value }));
@@ -54,7 +56,7 @@ export const StorageGridConfig: React.FC<StorageGridConfigProps> = ({
     setRetrievalFile(retrievalFile);
     setConfig(prev => ({ ...prev, boxData: packagingFile }));
     
-    onAlgorithmData?.(packagingData);
+    onPackagingData?.(packagingData);
     
     toast({
       title: "Random data generated",
@@ -79,7 +81,7 @@ export const StorageGridConfig: React.FC<StorageGridConfigProps> = ({
       // If no packaging file uploaded, fetch from server
       if (!packagingFile) {
         const packagingData = await fetchPackagingData();
-        onAlgorithmData?.(packagingData);
+        onPackagingData?.(packagingData);
         console.log('Fetched packaging data:', packagingData);
       }
 
@@ -111,7 +113,7 @@ export const StorageGridConfig: React.FC<StorageGridConfigProps> = ({
       // If no retrieval file uploaded, fetch from server
       if (!retrievalFile) {
         const retrievalData = await fetchRetrievalData();
-        onAlgorithmData?.(retrievalData);
+        onRetrievalData?.(retrievalData);
         toast({
           title: "Retrieval data loaded",
           description: `Successfully loaded ${retrievalData.length} boxes for animation.`

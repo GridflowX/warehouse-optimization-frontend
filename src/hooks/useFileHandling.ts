@@ -2,7 +2,10 @@ import { useState } from 'react';
 import { AlgorithmData } from '@/types/warehouse';
 import { useToast } from '@/hooks/use-toast';
 
-export const useFileHandling = (onAlgorithmData?: (data: AlgorithmData) => void) => {
+export const useFileHandling = (
+  onPackagingData?: (data: AlgorithmData) => void,
+  onRetrievalData?: (data: AlgorithmData) => void
+) => {
   const { toast } = useToast();
   const [packagingFile, setPackagingFile] = useState<File | null>(null);
   const [retrievalFile, setRetrievalFile] = useState<File | null>(null);
@@ -58,7 +61,7 @@ export const useFileHandling = (onAlgorithmData?: (data: AlgorithmData) => void)
       }
       
       if (validatePackagingData(data)) {
-        onAlgorithmData?.(data);
+        onPackagingData?.(data);
         toast({
           title: "Packaging data loaded",
           description: `Successfully loaded ${data.length} boxes.`
@@ -102,7 +105,7 @@ export const useFileHandling = (onAlgorithmData?: (data: AlgorithmData) => void)
       }
       
       if (validateRetrievalData(data)) {
-        onAlgorithmData?.(data);
+        onRetrievalData?.(data);
         toast({
           title: "Retrieval data loaded",
           description: `Successfully loaded ${data.length} boxes for animation.`
