@@ -33,7 +33,7 @@ export const StorageGridConfig: React.FC<StorageGridConfigProps> = ({
     maximumSideLength: 200,
     clearance: 20
   });
-  const [dataMode, setDataMode] = useState<DataMode | ''>('');
+  const [dataMode, setDataMode] = useState<DataMode | '' | 'expanded'>('');
 
   const {
     packagingFile,
@@ -151,34 +151,42 @@ export const StorageGridConfig: React.FC<StorageGridConfigProps> = ({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Data Mode Selection */}
+        {/* Data Input Mode */}
         <div className="space-y-2">
-          <Label htmlFor="data-mode">Data Input Mode</Label>
-          <Select value={dataMode} onValueChange={handleDataModeChange}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select how to input data" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="upload-packaging">
-                <div className="flex items-center gap-2">
-                  <Package className="w-4 h-4" />
-                  Upload Packaging JSON
-                </div>
-              </SelectItem>
-              <SelectItem value="upload-retrieval">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4" />
-                  Upload Retrieval JSON
-                </div>
-              </SelectItem>
-              <SelectItem value="random">
-                <div className="flex items-center gap-2">
-                  <Shuffle className="w-4 h-4" />
-                  Generate Random Data
-                </div>
-              </SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setDataMode(dataMode === '' ? 'expanded' : '')}>
+            <Label>Data Input Mode</Label>
+            <div className={`transition-transform ${dataMode === 'expanded' ? 'rotate-90' : ''}`}>
+              ▶
+            </div>
+          </div>
+          {dataMode === 'expanded' && (
+            <div className="space-y-2 pl-4 border-l-2 border-muted">
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => handleDataModeChange('upload-packaging')}
+              >
+                <Package className="w-4 h-4 mr-2" />
+                Upload Packaging JSON
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => handleDataModeChange('upload-retrieval')}
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Upload Retrieval JSON
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => handleDataModeChange('random')}
+              >
+                <Shuffle className="w-4 h-4 mr-2" />
+                Generate Random Data
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* File Status Display */}
@@ -312,15 +320,6 @@ export const StorageGridConfig: React.FC<StorageGridConfigProps> = ({
             <p>• Clearance ensures boxes do not touch</p>
           </div>
 
-          <Button 
-            onClick={handleAnimateRetrieval}
-            variant="secondary"
-            className="w-full"
-            size="lg"
-          >
-            <Play className="w-4 h-4 mr-2" />
-            Animate Retrieval Path
-          </Button>
         </div>
       </CardContent>
     </Card>
