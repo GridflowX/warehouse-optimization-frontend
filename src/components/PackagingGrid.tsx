@@ -13,7 +13,7 @@ interface GridBox {
   width: number;
   height: number;
   index: number;
-  placed: boolean;
+  packed: boolean;
 }
 
 export const PackagingGrid: React.FC<PackagingGridProps> = ({ config, algorithmData }) => {
@@ -31,20 +31,19 @@ export const PackagingGrid: React.FC<PackagingGridProps> = ({ config, algorithmD
 
     // Initialize boxes from algorithm data
     if (algorithmData) {
-      const initialBoxes = algorithmData.map((boxData) => {
-        const firstStep = boxData.path[0];
-        const lastStep = boxData.path[boxData.path.length - 1];
-        
-        return {
+      const initialBoxes = algorithmData
+        .filter((boxData) => boxData.packed) // Only show packed boxes
+        .map((boxData) => ({
           id: `box-${boxData.index}`,
-          x: lastStep?.x || firstStep?.x || 0,
-          y: lastStep?.y || firstStep?.y || 0,
-          width: Math.min(config.maximumSideLength, config.minimumSideLength + Math.random() * (config.maximumSideLength - config.minimumSideLength)),
-          height: Math.min(config.maximumSideLength, config.minimumSideLength + Math.random() * (config.maximumSideLength - config.minimumSideLength)),
+          x: boxData.x,
+          y: boxData.y,
+          width: boxData.width,
+          height: boxData.height,
           index: boxData.index,
-          placed: true
-        };
-      });
+          packed: boxData.packed
+        }))
+        .sort((a, b) => a.index - b.index); // Sort by index for proper placement order
+      
       setBoxes(initialBoxes);
     }
   }, [config, algorithmData]);
@@ -135,6 +134,15 @@ export const PackagingGrid: React.FC<PackagingGridProps> = ({ config, algorithmD
                 fontWeight="bold"
               >
                 {box.index}
+              </text>
+              {/* Show coordinates for debugging */}
+              <text
+                x={box.x + 2}
+                y={transformY(box.y) - 2}
+                fill="hsl(var(--muted-foreground))"
+                fontSize="10"
+              >
+                ({box.x},{box.y})
               </text>
             </g>
           ))}

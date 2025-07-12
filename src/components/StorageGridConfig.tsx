@@ -16,8 +16,13 @@ export interface AlgorithmStep {
 
 export interface AlgorithmBox {
   index: number;
-  retrieval_order: number;
-  path: AlgorithmStep[];
+  width: number;
+  height: number;
+  x: number;
+  y: number;
+  packed: boolean;
+  retrieval_order?: number;
+  path?: AlgorithmStep[];
 }
 
 export type AlgorithmData = AlgorithmBox[];

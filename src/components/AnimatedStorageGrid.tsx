@@ -20,6 +20,8 @@ interface AnimatedBox {
   height: number;
   isRemoving: boolean;
   pathIndex: number;
+  index: number;
+  packed: boolean;
 }
 
 export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
@@ -42,29 +44,35 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
       // Calculate grid dimensions from the algorithm data
       let maxX = 1000, maxY = 2000;
       algorithmData.forEach(box => {
-        box.path.forEach(step => {
-          maxX = Math.max(maxX, step.x + 100);
-          maxY = Math.max(maxY, step.y + 100);
-        });
+        maxX = Math.max(maxX, box.x + box.width + 100);
+        maxY = Math.max(maxY, box.y + box.height + 100);
+        if (box.path) {
+          box.path.forEach(step => {
+            maxX = Math.max(maxX, step.x + 100);
+            maxY = Math.max(maxY, step.y + 100);
+          });
+        }
       });
       setGridDimensions({ width: maxX, height: maxY });
 
-      const boxes: AnimatedBox[] = algorithmData.map((box) => {
-        const finalPos = box.path[box.path.length - 1] || { x: 0, y: 0 };
-        return {
+      const boxes: AnimatedBox[] = algorithmData
+        .filter((box) => box.packed) // Only show packed boxes
+        .map((box) => ({
           id: `box-${box.index}`,
-          x: finalPos.x,
-          y: finalPos.y,
+          x: box.x,
+          y: box.y,
           isVisible: true,
           isAnimating: false,
-          finalX: finalPos.x,
-          finalY: finalPos.y,
-          width: 40 + Math.random() * 20,
-          height: 40 + Math.random() * 20,
+          finalX: box.x,
+          finalY: box.y,
+          width: box.width,
+          height: box.height,
           isRemoving: false,
           pathIndex: 0,
-        };
-      });
+          index: box.index,
+          packed: box.packed,
+        }))
+        .sort((a, b) => a.index - b.index);
       setAnimatedBoxes(boxes);
       setCurrentStep(0);
     }
@@ -84,15 +92,15 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
       const boxToRetrieve = algorithmData.find(box => box.retrieval_order === currentStep);
       if (boxToRetrieve) {
         animateBoxRetrieval(boxToRetrieve);
-        setCurrentStep(prev => prev + 1);
       }
+      setCurrentStep(prev => prev + 1);
     }, animationSpeed);
 
     return () => clearTimeout(timer);
   }, [isPlaying, currentStep, algorithmData, animationSpeed, isRetrievalMode]);
 
   const animateBoxRetrieval = (box: AlgorithmBox) => {
-    if (box.path.length === 0) {
+    if (!box.path || box.path.length === 0) {
       // If no path, just remove the box
       setAnimatedBoxes(prev => prev.map(animBox => {
         if (animBox.id === `box-${box.index}`) {
@@ -117,8 +125,8 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
     // Animate through the retrieval path
     let pathIndex = 0;
     const pathInterval = setInterval(() => {
-      if (pathIndex < box.path.length) {
-        const step = box.path[pathIndex];
+      if (pathIndex < box.path!.length) {
+        const step = box.path![pathIndex];
         setAnimatedBoxes(prev => prev.map(animBox => {
           if (animBox.id === `box-${box.index}`) {
             return {
@@ -164,22 +172,24 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
     setCurrentStep(0);
     setIsRetrievalMode(false);
     if (algorithmData) {
-      const resetBoxes: AnimatedBox[] = algorithmData.map((box) => {
-        const finalPos = box.path[box.path.length - 1] || { x: 0, y: 0 };
-        return {
+      const resetBoxes: AnimatedBox[] = algorithmData
+        .filter((box) => box.packed)
+        .map((box) => ({
           id: `box-${box.index}`,
-          x: finalPos.x,
-          y: finalPos.y,
+          x: box.x,
+          y: box.y,
           isVisible: true,
           isAnimating: false,
-          finalX: finalPos.x,
-          finalY: finalPos.y,
-          width: 40 + Math.random() * 20,
-          height: 40 + Math.random() * 20,
+          finalX: box.x,
+          finalY: box.y,
+          width: box.width,
+          height: box.height,
           isRemoving: false,
           pathIndex: 0,
-        };
-      });
+          index: box.index,
+          packed: box.packed,
+        }))
+        .sort((a, b) => a.index - b.index);
       setAnimatedBoxes(resetBoxes);
     }
   };
@@ -275,8 +285,8 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
           {animatedBoxes.filter(box => box.isVisible).map((box) => (
             <g key={box.id}>
               <rect
-                x={box.x - box.width/2}
-                y={transformY(box.y + box.height/2)}
+                x={box.x}
+                y={transformY(box.y + box.height)}
                 width={box.width}
                 height={box.height}
                 fill={box.isRemoving ? "hsl(var(--destructive) / 0.8)" : "hsl(var(--primary) / 0.8)"}
@@ -286,15 +296,15 @@ export const AnimatedStorageGrid: React.FC<AnimatedStorageGridProps> = ({
                 className={`transition-all duration-300 ${box.isAnimating ? 'animate-pulse' : ''}`}
               />
               <text
-                x={box.x}
-                y={transformY(box.y - 3)}
+                x={box.x + box.width / 2}
+                y={transformY(box.y + box.height / 2)}
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fill="hsl(var(--primary-foreground))"
                 fontSize="12"
                 fontWeight="bold"
               >
-                {box.id.split('-')[1]}
+                {box.index}
               </text>
             </g>
           ))}
