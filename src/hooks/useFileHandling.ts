@@ -12,9 +12,12 @@ export const useFileHandling = (onAlgorithmData?: (data: AlgorithmData) => void)
       typeof item.index === 'number' && 
       typeof item.width === 'number' && 
       typeof item.height === 'number' && 
-      typeof item.x === 'number' && 
-      typeof item.y === 'number' && 
-      typeof item.packed === 'boolean'
+      typeof item.packed === 'boolean' &&
+      // For packed boxes, x and y must be numbers. For unpacked boxes, they can be null
+      (item.packed 
+        ? (typeof item.x === 'number' && typeof item.y === 'number')
+        : (item.x === null && item.y === null)
+      )
     );
   };
 
