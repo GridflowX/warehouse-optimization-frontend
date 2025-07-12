@@ -3,7 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Settings, Upload, Save, Play, Package, FileText } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Settings, Upload, Save, Play, Package, FileText, Shuffle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { fetchPackagingData, fetchRetrievalData, saveConfiguration } from '@/services/api';
 
@@ -59,6 +60,7 @@ export const StorageGridConfig: React.FC<StorageGridConfigProps> = ({
   });
   const [packagingFile, setPackagingFile] = useState<File | null>(null);
   const [retrievalFile, setRetrievalFile] = useState<File | null>(null);
+  const [dataMode, setDataMode] = useState<string>('');
 
   const handleInputChange = (field: keyof StorageConfig, value: number) => {
     setConfig(prev => ({ ...prev, [field]: value }));
@@ -87,10 +89,24 @@ export const StorageGridConfig: React.FC<StorageGridConfigProps> = ({
           throw new Error('Unsupported file format');
         }
         
-        toast({
-          title: "Packaging data loaded",
-          description: `Successfully loaded packaging configuration.`
-        });
+        // Validate the data structure for packaging
+        if (Array.isArray(data) && data.every(item => 
+          typeof item.index === 'number' && 
+          typeof item.width === 'number' && 
+          typeof item.height === 'number' && 
+          typeof item.x === 'number' && 
+          typeof item.y === 'number' && 
+          typeof item.packed === 'boolean'
+        )) {
+          onAlgorithmData?.(data);
+          toast({
+            title: "Packaging data loaded",
+            description: `Successfully loaded ${data.length} boxes.`
+          });
+        } else {
+          throw new Error('Invalid packaging data format');
+        }
+        
       } catch (error) {
         console.error('Packaging file parsing error:', error);
         toast({
@@ -154,12 +170,77 @@ export const StorageGridConfig: React.FC<StorageGridConfigProps> = ({
     }
   };
 
+  const generateRandomData = () => {
+    const packagingData: AlgorithmData = [];
+    const retrievalData: AlgorithmData = [];
+    
+    for (let i = 0; i < config.numberOfRectangles; i++) {
+      const width = Math.floor(Math.random() * (config.maximumSideLength - config.minimumSideLength + 1)) + config.minimumSideLength;
+      const height = Math.floor(Math.random() * (config.maximumSideLength - config.minimumSideLength + 1)) + config.minimumSideLength;
+      
+      // Random placement within storage bounds
+      const x = Math.floor(Math.random() * (config.storageWidth - width));
+      const y = Math.floor(Math.random() * (config.storageLength - height));
+      
+      const box: AlgorithmBox = {
+        index: i,
+        width,
+        height,
+        x,
+        y,
+        packed: Math.random() > 0.1, // 90% chance of being packed
+        retrieval_order: i + 1,
+        path: [
+          { step: 0, x, y },
+          { step: 1, x: x + width / 2, y: y + height / 2 },
+          { step: 2, x: config.storageWidth + 50, y: config.storageLength + 50 }
+        ]
+      };
+      
+      packagingData.push(box);
+      
+      if (box.packed) {
+        retrievalData.push(box);
+      }
+    }
+    
+    // Create blob files
+    const packagingBlob = new Blob([JSON.stringify(packagingData, null, 2)], { type: 'application/json' });
+    const retrievalBlob = new Blob([JSON.stringify(retrievalData, null, 2)], { type: 'application/json' });
+    
+    const packagingFile = new File([packagingBlob], 'packaging.json', { type: 'application/json' });
+    const retrievalFile = new File([retrievalBlob], 'retrieval.json', { type: 'application/json' });
+    
+    setPackagingFile(packagingFile);
+    setRetrievalFile(retrievalFile);
+    setConfig(prev => ({ ...prev, boxData: packagingFile }));
+    
+    onAlgorithmData?.(packagingData);
+    
+    toast({
+      title: "Random data generated",
+      description: `Generated ${packagingData.length} random boxes with placement data.`
+    });
+  };
+
+  const handleDataModeChange = (value: string) => {
+    setDataMode(value);
+    
+    if (value === 'upload-packaging') {
+      document.getElementById('packaging-data')?.click();
+    } else if (value === 'upload-retrieval') {
+      document.getElementById('retrieval-data')?.click();
+    } else if (value === 'random') {
+      generateRandomData();
+    }
+  };
+
   const handleSaveConfiguration = async () => {
     try {
       // If no packaging file uploaded, fetch from server
       if (!packagingFile) {
         const packagingData = await fetchPackagingData();
-        // Process packaging data and set up grid
+        onAlgorithmData?.(packagingData);
         console.log('Fetched packaging data:', packagingData);
       }
 
@@ -227,61 +308,73 @@ export const StorageGridConfig: React.FC<StorageGridConfigProps> = ({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Packaging File Upload */}
+        {/* Data Mode Selection */}
         <div className="space-y-2">
-          <Label htmlFor="packaging-data" className="flex items-center gap-2">
-            <Package className="w-4 h-4" />
-            Upload Packaging JSON or CSV:
-          </Label>
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              onClick={() => document.getElementById('packaging-data')?.click()}
-              className="flex items-center gap-2"
-            >
-              <Upload className="w-4 h-4" />
-              Choose packaging file
-            </Button>
+          <Label htmlFor="data-mode">Data Input Mode</Label>
+          <Select value={dataMode} onValueChange={handleDataModeChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select how to input data" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="upload-packaging">
+                <div className="flex items-center gap-2">
+                  <Package className="w-4 h-4" />
+                  Upload Packaging JSON
+                </div>
+              </SelectItem>
+              <SelectItem value="upload-retrieval">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Upload Retrieval JSON
+                </div>
+              </SelectItem>
+              <SelectItem value="random">
+                <div className="flex items-center gap-2">
+                  <Shuffle className="w-4 h-4" />
+                  Generate Random Data
+                </div>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* File Status Display */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+            <div className="flex items-center gap-2">
+              <Package className="w-4 h-4" />
+              <span className="text-sm font-medium">Packaging File:</span>
+            </div>
             <span className="text-sm text-muted-foreground">
-              {packagingFile ? packagingFile.name : 'No packaging file chosen'}
+              {packagingFile ? packagingFile.name : 'No file selected'}
             </span>
-            <input
-              id="packaging-data"
-              type="file"
-              accept=".csv,.json"
-              onChange={handlePackagingFileChange}
-              className="hidden"
-            />
+          </div>
+          <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              <span className="text-sm font-medium">Retrieval File:</span>
+            </div>
+            <span className="text-sm text-muted-foreground">
+              {retrievalFile ? retrievalFile.name : 'No file selected'}
+            </span>
           </div>
         </div>
 
-        {/* Retrieval File Upload */}
-        <div className="space-y-2">
-          <Label htmlFor="retrieval-data" className="flex items-center gap-2">
-            <FileText className="w-4 h-4" />
-            Upload Retrieval JSON or CSV:
-          </Label>
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              onClick={() => document.getElementById('retrieval-data')?.click()}
-              className="flex items-center gap-2"
-            >
-              <Upload className="w-4 h-4" />
-              Choose retrieval file
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              {retrievalFile ? retrievalFile.name : 'No retrieval file chosen'}
-            </span>
-            <input
-              id="retrieval-data"
-              type="file"
-              accept=".csv,.json"
-              onChange={handleRetrievalFileChange}
-              className="hidden"
-            />
-          </div>
-        </div>
+        {/* Hidden file inputs */}
+        <input
+          id="packaging-data"
+          type="file"
+          accept=".csv,.json"
+          onChange={handlePackagingFileChange}
+          className="hidden"
+        />
+        <input
+          id="retrieval-data"
+          type="file"
+          accept=".csv,.json"
+          onChange={handleRetrievalFileChange}
+          className="hidden"
+        />
 
         {/* Storage Width */}
         <div className="space-y-2">
