@@ -1,10 +1,5 @@
 # Warehouse Optimization Research Platform
 
-**Live Preview:**  
-[https://lovable.dev/projects/d688f532-c4d3-424b-a62b-1346606f44c8](https://lovable.dev/projects/d688f532-c4d3-424b-a62b-1346606f44c8)
-
-## Overview
-
 This project is an interactive platform for visualizing and optimizing warehouse storage and retrieval operations. It allows users to:
 
 - Explore a network of warehouses and view detailed layouts for each.
