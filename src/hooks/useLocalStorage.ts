@@ -45,6 +45,44 @@ export const loadGraphData = () => {
   }
 };
 
+// Optimization data storage
+export const saveOptimizationData = (data: any) => {
+  try {
+    localStorage.setItem('gridflow_optimization_data', JSON.stringify(data));
+  } catch (error) {
+    console.error('Error saving optimization data:', error);
+  }
+};
+
+export const loadOptimizationData = () => {
+  try {
+    const data = localStorage.getItem('gridflow_optimization_data');
+    return data ? JSON.parse(data) : null;
+  } catch (error) {
+    console.error('Error loading optimization data:', error);
+    return null;
+  }
+};
+
+// Alpha/Beta parameter storage
+export const saveAlphaBeta = (alpha: number, beta: number) => {
+  try {
+    localStorage.setItem('gridflow_alpha_beta', JSON.stringify({ alpha, beta }));
+  } catch (error) {
+    console.error('Error saving alpha/beta:', error);
+  }
+};
+
+export const loadAlphaBeta = () => {
+  try {
+    const data = localStorage.getItem('gridflow_alpha_beta');
+    return data ? JSON.parse(data) : { alpha: 0.500, beta: 0.500 };
+  } catch (error) {
+    console.error('Error loading alpha/beta:', error);
+    return { alpha: 0.500, beta: 0.500 };
+  }
+};
+
 export const saveWarehouseData = (warehouseId: string, data: any) => {
   try {
     const key = `gridflow_warehouse_${warehouseId}`;

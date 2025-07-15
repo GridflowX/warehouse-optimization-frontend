@@ -23,7 +23,26 @@ export interface OptimizationRequest {
 }
 
 export interface OptimizationResponse {
-  success: boolean;
+  status: string;
+  output?: {
+    nodes: Array<{
+      id: number;
+      x: number;
+      y: number;
+      type: string;
+    }>;
+    edges: Array<{
+      source: number;
+      target: number;
+      length: number;
+    }>;
+    flows: Array<{
+      commodity: number;
+      source: number;
+      target: number;
+      flow: number;
+    }>;
+  };
+  success?: boolean;
   message?: string;
-  optimizedRoutes?: any;
 }

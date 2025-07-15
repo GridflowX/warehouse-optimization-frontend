@@ -44,15 +44,21 @@ export class ApiService {
 
   static async optimizeParameters(params: OptimizationRequest): Promise<OptimizationResponse> {
     try {
-      await this.request<any>('/input', {
+      const response = await this.request<OptimizationResponse>('/input', {
         method: 'POST',
         body: JSON.stringify({ alpha: params.alpha, beta: params.beta }),
       });
       
-      return {
-        success: true,
-        message: `Optimization completed with Alpha: ${params.alpha.toFixed(3)}, Beta: ${params.beta.toFixed(3)}`
-      };
+      // If the response has output data, mark it as successful
+      if (response.output) {
+        return {
+          ...response,
+          success: true,
+          message: `Optimization completed with Alpha: ${params.alpha.toFixed(3)}, Beta: ${params.beta.toFixed(3)}`
+        };
+      }
+      
+      return response;
     } catch (error) {
       console.error('Error sending optimization parameters:', error);
       throw error;

@@ -1,11 +1,12 @@
 // Optimization Controls with Alpha/Beta Sliders
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { OptimizationRequest } from '@/types/api';
+import { saveAlphaBeta, loadAlphaBeta } from '@/hooks/useLocalStorage';
 
 interface OptimizationControlsProps {
   onOptimize: (params: OptimizationRequest) => Promise<void>;
@@ -19,16 +20,27 @@ export const OptimizationControls: React.FC<OptimizationControlsProps> = ({
   const [alpha, setAlpha] = useState(0.500);
   const [beta, setBeta] = useState(0.500);
 
+  // Load alpha/beta from localStorage on component mount
+  useEffect(() => {
+    const { alpha: savedAlpha, beta: savedBeta } = loadAlphaBeta();
+    setAlpha(savedAlpha);
+    setBeta(savedBeta);
+  }, []);
+
   const handleAlphaChange = useCallback((value: number[]) => {
     const newAlpha = value[0];
+    const newBeta = 1 - newAlpha;
     setAlpha(newAlpha);
-    setBeta(1 - newAlpha); // Ensure alpha + beta = 1
+    setBeta(newBeta);
+    saveAlphaBeta(newAlpha, newBeta); // Save to localStorage
   }, []);
 
   const handleBetaChange = useCallback((value: number[]) => {
     const newBeta = value[0];
+    const newAlpha = 1 - newBeta;
     setBeta(newBeta);
-    setAlpha(1 - newBeta); // Ensure alpha + beta = 1
+    setAlpha(newAlpha);
+    saveAlphaBeta(newAlpha, newBeta); // Save to localStorage
   }, []);
 
   const handleOptimize = useCallback(async () => {
