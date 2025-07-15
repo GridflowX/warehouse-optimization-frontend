@@ -64,7 +64,7 @@ const GraphVisualization: React.FC = () => {
     );
   }
 
-  if (!graphData) {
+  if (!optimizationData) {
     return (
       <div className="min-h-screen bg-background graph-grid-background flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -109,8 +109,8 @@ const GraphVisualization: React.FC = () => {
                 </p>
               </div>
               <GraphCanvas
-                warehouses={graphData.coordinates}
-                edges={graphData.edges}
+                warehouses={optimizationData.nodes || []}
+                edges={optimizationData.edges || []}
                 onWarehouseClick={handleWarehouseClick}
                 selectedWarehouse={undefined}
                 optimizationData={optimizationData}
@@ -131,16 +131,16 @@ const GraphVisualization: React.FC = () => {
               {/* Statistics */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto w-full">
                 <div className="text-center p-4 rounded-lg border bg-card">
-                  <div className="text-2xl font-bold">{graphData.coordinates.length}</div>
-                  <div className="text-sm text-muted-foreground">Warehouses</div>
+                  <div className="text-2xl font-bold">{optimizationData.nodes?.filter(n => n.type === 'station').length || 0}</div>
+                  <div className="text-sm text-muted-foreground">Stations</div>
                 </div>
                 <div className="text-center p-4 rounded-lg border bg-card">
-                  <div className="text-2xl font-bold">{graphData.edges.length}</div>
-                  <div className="text-sm text-muted-foreground">Direct Routes</div>
+                  <div className="text-2xl font-bold">{optimizationData.nodes?.filter(n => n.type === 'steiner').length || 0}</div>
+                  <div className="text-sm text-muted-foreground">Steiner Points</div>
                 </div>
                 <div className="text-center p-4 rounded-lg border bg-card">
-                  <div className="text-2xl font-bold">{graphData.initialDistance.toFixed(1)}</div>
-                  <div className="text-sm text-muted-foreground">Initial Distance</div>
+                  <div className="text-2xl font-bold">{optimizationData.edges?.length || 0}</div>
+                  <div className="text-sm text-muted-foreground">Connections</div>
                 </div>
               </div>
             </div>
