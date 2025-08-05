@@ -74,6 +74,8 @@ export const GraphCanvas: React.FC<GraphCanvasProps> = ({
   selectedWarehouse,
   optimizationData
 }) => {
+  // Debug log to verify optimization data updates
+  console.log('GraphCanvas received optimizationData:', optimizationData);
   // Calculate canvas bounds with normalized coordinate system (0,0) to (1,1)
   const canvasSize = { width: 800, height: 600 };
   const margin = 50;

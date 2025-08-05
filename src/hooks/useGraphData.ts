@@ -87,17 +87,55 @@ export const useGraphData = () => {
 
   const optimizeParameters = async (params: OptimizationRequest) => {
     try {
-      const response = await ApiService.optimizeParameters(params);
-      if ((response.success || response.status === 'success') && response.output) {
-        // Save the new optimization data to localStorage
-        setOptimizationData(response.output);
-        saveOptimizationData(response.output);
-        
+      // Check if we're using mock data
+      const useMockData = import.meta.env.VITE_USE_MOCK === 'true';
+      
+      if (useMockData) {
         toast({
-          title: "Optimization Successful",
-          description: "Parameters optimized successfully",
+          title: "Using Mock Data",
+          description: "Running with simulated data since backend is not connected.",
+        });
+      } else {
+        toast({
+          title: "Optimization Started",
+          description: "Processing optimization... This may take several minutes. Please wait and do not refresh the page.",
         });
       }
+
+      const response = await ApiService.optimizeParameters(params);
+      
+      // Handle different response formats from the new Beckn API
+      let optimizationOutput = null;
+      if (response.output) {
+        optimizationOutput = response.output;
+      } else if (response.message && typeof response.message === 'object') {
+        // Check if the response structure is in the message field
+        optimizationOutput = response.message;
+      } else if (response.nodes || response.edges) {
+        // Direct response format
+        optimizationOutput = response;
+      }
+
+      if (optimizationOutput && (optimizationOutput.nodes || optimizationOutput.edges)) {
+        // Debug log to verify data structure
+        console.log('Setting optimization data:', optimizationOutput);
+        
+        // Save the new optimization data to localStorage
+        setOptimizationData(optimizationOutput);
+        saveOptimizationData(optimizationOutput);
+        
+        const useMockData = import.meta.env.VITE_USE_MOCK === 'true';
+        toast({
+          title: useMockData ? "Mock Optimization Complete" : "Optimization Successful",
+          description: useMockData 
+            ? `Simulated optimization with Alpha: ${params.alpha.toFixed(3)}, Beta: ${params.beta.toFixed(3)}` 
+            : `Network optimized with Alpha: ${params.alpha.toFixed(3)}, Beta: ${params.beta.toFixed(3)}`,
+        });
+      } else {
+        console.error('Invalid optimization output:', optimizationOutput);
+        throw new Error('Invalid response format: no optimization data received');
+      }
+      
       return response;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to optimize parameters';

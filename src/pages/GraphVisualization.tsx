@@ -109,8 +109,9 @@ const GraphVisualization: React.FC = () => {
                 </p>
               </div>
               <GraphCanvas
-                warehouses={optimizationData.nodes || []}
-                edges={optimizationData.edges || []}
+                key={optimizationData ? JSON.stringify(optimizationData.flows?.slice(0, 3)) : 'default'} // Force re-render on data change
+                warehouses={[]} // Empty array since we're using optimizationData
+                edges={[]} // Empty array since we're using optimizationData
                 onWarehouseClick={handleWarehouseClick}
                 selectedWarehouse={undefined}
                 optimizationData={optimizationData}

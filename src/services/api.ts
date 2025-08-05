@@ -3,8 +3,8 @@
 import { GraphData, OptimizationRequest, OptimizationResponse } from '@/types/api';
 import { useMockData } from './mockData';
 
-const API_BASE_URL = 'https://guideway-optimisation.onrender.com';
-const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK !== 'false'; // Default to true for development
+const API_BASE_URL = import.meta.env.DEV ? '/api' : 'http://34.93.81.16';
+const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK === 'true'; // Default to false for production backend
 
 export class ApiService {
   private static async request<T>(
@@ -13,19 +13,36 @@ export class ApiService {
   ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
     
-    const response = await fetch(url, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      ...options,
-    });
+    try {
+      const response = await fetch(url, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          ...options.headers,
+        },
+        mode: 'cors',
+        ...options,
+      });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      if (error.message?.includes('CORS')) {
+        throw new Error('CORS error - API server needs to allow cross-origin requests');
+      }
+      if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
+        throw new Error('Network error - Unable to connect to API server');
+      }
+      if (error.message?.includes('ERR_NETWORK')) {
+        throw new Error('Network error - Unable to reach the API server');
+      }
+      // Log the actual error for debugging
+      console.error('API request failed:', error);
+      throw error;
     }
-
-    return response.json();
   }
 
   static async getGraphData(): Promise<GraphData> {
@@ -43,24 +60,118 @@ export class ApiService {
   }
 
   static async optimizeParameters(params: OptimizationRequest): Promise<OptimizationResponse> {
+    // If mock data is enabled, return mock response in Beckn format
+    if (USE_MOCK_DATA) {
+      console.log('Using mock data for optimization');
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate delay
+      return {
+        status: 'success',
+        success: true,
+        message: `Mock optimization with Alpha: ${params.alpha.toFixed(3)}, Beta: ${params.beta.toFixed(3)}`,
+        output: {
+          nodes: [
+            {"id":0,"x":0,"y":1,"type":"station"},
+            {"id":1,"x":1,"y":2,"type":"station"},
+            {"id":2,"x":1,"y":0,"type":"station"},
+            {"id":3,"x":2,"y":2,"type":"station"},
+            {"id":4,"x":2,"y":0,"type":"station"},
+            {"id":5,"x":3,"y":2,"type":"station"},
+            {"id":6,"x":3,"y":0,"type":"station"},
+            {"id":7,"x":1,"y":1,"type":"steiner"},
+            {"id":8,"x":2,"y":1,"type":"steiner"},
+            {"id":9,"x":3,"y":1,"type":"steiner"}
+          ],
+          edges: [
+            {"source":0,"target":2,"length":1.41},
+            {"source":1,"target":3,"length":1.0},
+            {"source":3,"target":5,"length":1.0},
+            {"source":2,"target":4,"length":1.0},
+            {"source":0,"target":7,"length":1.0},
+            {"source":7,"target":1,"length":1.0},
+            {"source":8,"target":3,"length":1.0},
+            {"source":9,"target":6,"length":1.0},
+            {"source":3,"target":1,"length":1.0},
+            {"source":4,"target":8,"length":1.0},
+            {"source":5,"target":9,"length":1.0}
+          ],
+          flows: [
+            {"commodity":3,"source":0,"target":2,"flow":40.0 * params.alpha},
+            {"commodity":0,"source":1,"target":3,"flow":52.0 * params.beta},
+            {"commodity":1,"source":3,"target":5,"flow":12.0 * params.alpha},
+            {"commodity":4,"source":2,"target":4,"flow":30.0 * params.beta},
+            {"commodity":0,"source":0,"target":7,"flow":52.0 * params.alpha},
+            {"commodity":0,"source":7,"target":1,"flow":52.0 * params.beta},
+            {"commodity":5,"source":8,"target":3,"flow":115.0 * params.alpha},
+            {"commodity":2,"source":9,"target":6,"flow":25.0 * params.beta},
+            {"commodity":5,"source":3,"target":1,"flow":115.0 * params.alpha},
+            {"commodity":5,"source":4,"target":8,"flow":115.0 * params.beta},
+            {"commodity":2,"source":5,"target":9,"flow":25.0 * params.alpha}
+          ]
+        }
+      };
+    }
+
     try {
-      const response = await this.request<OptimizationResponse>('/input', {
+      // Create Beckn protocol request structure
+      const becknRequest = {
+        context: {
+          domain: "warehouse-optimization",
+          action: "on_search",
+          bap_id: `bap_${Math.random().toString(36).substring(2, 15)}`,
+          bpp_id: `bpp_${Math.random().toString(36).substring(2, 15)}`,
+          transaction_id: `tx_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
+          message_id: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
+          timestamp: new Date().toISOString()
+        },
+        message: {
+          alpha: params.alpha,
+          beta: params.beta
+        }
+      };
+
+      console.log('Sending Beckn request:', JSON.stringify(becknRequest, null, 2));
+
+      const response = await this.request<any>('/search', {
         method: 'POST',
-        body: JSON.stringify({ alpha: params.alpha, beta: params.beta }),
+        body: JSON.stringify(becknRequest),
       });
       
-      // If the response has output data, mark it as successful
-      if (response.output) {
-        return {
-          ...response,
-          success: true,
-          message: `Optimization completed with Alpha: ${params.alpha.toFixed(3)}, Beta: ${params.beta.toFixed(3)}`
-        };
+      console.log('Raw API response:', response);
+      
+      // Parse Beckn protocol response format
+      let optimizationOutput = null;
+      if (response.message && response.message.output) {
+        optimizationOutput = response.message.output;
+      } else if (response.message && response.message.status === 'success' && response.message.output) {
+        optimizationOutput = response.message.output;
       }
       
-      return response;
+      if (optimizationOutput) {
+        return {
+          status: 'success',
+          success: true,
+          message: `Optimization completed with Alpha: ${params.alpha.toFixed(3)}, Beta: ${params.beta.toFixed(3)}`,
+          output: optimizationOutput
+        };
+      } else {
+        console.error('Invalid response format:', response);
+        throw new Error('Invalid response format: expected message.output field');
+      }
     } catch (error) {
       console.error('Error sending optimization parameters:', error);
+      
+      // Provide helpful error message based on the error type
+      if (error.message?.includes('CORS')) {
+        throw new Error('CORS Error: The API server needs to allow cross-origin requests. Check your backend CORS configuration.');
+      }
+      if (error.message?.includes('Network error')) {
+        throw new Error('Network Error: Unable to connect to the optimization server. Please check if the server is running.');
+      }
+      if (error.message?.includes('Failed to fetch')) {
+        throw new Error('Connection Failed: Unable to reach the optimization server. Please check your network connection and server status.');
+      }
+      
+      // Re-throw the original error if we don't have a specific handler
       throw error;
     }
   }

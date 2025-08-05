@@ -109,7 +109,7 @@ export const OptimizationControls: React.FC<OptimizationControlsProps> = ({
           disabled={loading || Math.abs(alpha + beta - 1) > 0.001}
           className="w-full"
         >
-          {loading ? 'Optimizing...' : 'Apply Optimization'}
+{loading ? 'Processing... (This may take several minutes)' : 'Apply Optimization'}
         </Button>
       </CardContent>
     </Card>
